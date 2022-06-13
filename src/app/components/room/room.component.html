@@ -1,1 +1,31 @@
-<button mat-raised-button color="primary" class="h6">Buy tickets and play game</button>
+<ng-container *ngIf="isBuyTime">
+  <button mat-raised-button color="primary" class="h6" (click)="startGame()">Buy tickets and play game</button>
+</ng-container>
+
+<ng-container *ngIf="isCountDownTime">
+  <p class="row h4 text-center">Time to start: {{timeToStart}}</p>
+  <p class="row h4">Yo have: {{boughTickets}} bought tickets</p>
+</ng-container>
+
+<ng-container *ngIf="isPlayTime">
+  <p class="row h4 text-center">calledBalls: {{calledBalls$ | async}}</p>
+  <mat-card>
+    <mat-card-header class="text-center">
+      Win Board
+    </mat-card-header>
+  </mat-card>
+  <div class="row" style="max-width: 80vw; overflow: hidden">
+
+    <mat-card *ngFor="let board of boards">
+      <mat-card-header>
+        {{board.id}}
+      </mat-card-header>
+    </mat-card>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="isWonTime">
+  <p class="row h4 mat-primary text-center">Congratulate! You won</p>
+  <button mat-raised-button color="primary" class="h6" [routerLink]="''">Back to main page</button>
+  <button mat-raised-button color="primary" class="h6" (click)="startNewGame()">Start new game</button>
+</ng-container>

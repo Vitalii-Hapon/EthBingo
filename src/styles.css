@@ -28,7 +28,6 @@
   font-weight: 500 !important;
 }
 
-
 router-outlet + * {
   height: 100%;
   display: grid;
@@ -36,5 +35,10 @@ router-outlet + * {
   grid-gap: 1rem;
   background-color: rgba(0, 0, 0, 0.35);
   background-size: 50vh;
+  text-align: center;
+}
+
+.text-center {
+  display: inline-block;
   text-align: center;
 }

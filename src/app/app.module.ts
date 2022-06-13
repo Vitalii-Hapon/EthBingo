@@ -13,6 +13,7 @@ import { SignOutComponent } from './components/sign-out/sign-out.component';
 import { DepositComponent } from './components/deposit/deposit.component';
 import { MainPageComponent } from './components/main-page/main-page.component';
 import { AppRouting } from "./app-routing.module";
+import { MatCardModule } from "@angular/material/card";
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { AppRouting } from "./app-routing.module";
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
+    MatCardModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
