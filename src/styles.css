@@ -1,0 +1,40 @@
+.mat-app-background {
+  margin: 0;
+  box-sizing: border-box;
+  height: 100vh;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.text-color {
+  color: #7b1fa2 !important;
+}
+
+.h5 {
+  font-size: 18px !important;
+  font-weight: 500 !important;
+}
+
+.h4 {
+  font-size: 20px !important;
+  font-weight: 500 !important;
+}
+
+.h6 {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+
+router-outlet + * {
+  height: 100%;
+  display: grid;
+  place-content: center;
+  grid-gap: 1rem;
+  background-color: rgba(0, 0, 0, 0.35);
+  background-size: 50vh;
+  text-align: center;
+}
