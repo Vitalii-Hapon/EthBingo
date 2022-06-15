@@ -11,17 +11,20 @@ const calledBalls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 @Component({
   selector: 'app-room',
   templateUrl: './room.component.html',
-  styleUrls: ['./room.component.css']
+  styleUrls: ['./room.component.scss']
 })
 
 export class RoomComponent implements OnInit, OnDestroy {
   public timeToStart!: number;
   public calledBalls$!: Observable<number>;
+  public calledBalls: number[] = [];
   public boards = Boards;
   public boughTickets = 1;
   private currentGameTime!: GameTime;
   private stopCountDown$!: Subject<any>;
   private stopPlayTime$!: Subject<any>;
+  public ticket = [Array.from({length: 9}, () => Math.floor(Math.random() * 40)), Array.from({length: 9}, () => Math.floor(Math.random() * 40)), Array.from({length: 9}, () => Math.floor(Math.random() * 40))];
+
 
   constructor() { }
 
@@ -84,16 +87,16 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   private startCallingBalls(): void {
-    this.calledBalls$ = interval(1000).pipe(
+    interval(1000).pipe(
       takeUntil(this.stopPlayTime$),
       map(i => {
-        if (i === LimitForCountDown) {
+        if (i === calledBalls.length) {
           this.currentGameTime = GameTime.Won;
           this.stopPlayTime();
         }
-        return calledBalls[i];
+          this.calledBalls.unshift(calledBalls[i]);
       })
-    );
+    ).subscribe();
   }
 
   private finishGame(): void {

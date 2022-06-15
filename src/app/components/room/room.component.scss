@@ -1,0 +1,18 @@
+.swiper {
+  width: 90vw;
+}
+
+.board {
+  display: grid;
+  grid-gap: 0.5rem;
+}
+
+.number {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  background-color: rgba(123, 31, 162, 0.75);
+  font-size: 1rem;
+}

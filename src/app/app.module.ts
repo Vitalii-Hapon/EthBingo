@@ -14,6 +14,7 @@ import { DepositComponent } from './components/deposit/deposit.component';
 import { MainPageComponent } from './components/main-page/main-page.component';
 import { AppRouting } from "./app-routing.module";
 import { MatCardModule } from "@angular/material/card";
+import { SwiperModule } from "swiper/angular";
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { MatCardModule } from "@angular/material/card";
     MatButtonModule,
     MatIconModule,
     MatCardModule,
+    SwiperModule
   ],
   providers: [],
   bootstrap: [AppComponent]
