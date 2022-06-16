@@ -23,7 +23,7 @@
   </mat-card-title>
   <mat-card-content class="board">
     <div *ngFor="let row of ticket" class="row">
-      <div *ngFor="let number of row" class="number">
+      <div *ngFor="let number of row; let i = index; trackBy: trackByNumber" class="number" [ngClass]="{'warn': ballIsCalled(number)}">
         {{number}}
       </div>
     </div>
