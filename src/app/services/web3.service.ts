@@ -1,9 +1,6 @@
 import { Injectable } from '@angular/core';
 import Web3 from 'web3';
-// import { Contract } from "web3-eth-contract";
-
-// const Web3 = require('web3');
-const Web3EthContract = require('web3-eth-contract');
+import { AbiItem } from "web3-utils";
 
 @Injectable({
   providedIn: 'root'
@@ -25,8 +22,9 @@ export class Web3Service {
 
     this.provider = new Web3.providers.WebsocketProvider('wss://eth-goerli.alchemyapi.io/v2/wi9aNLc5ianem3nYTGf-G_wBzuM76DPZ');
     this.web3 = new Web3('wss://eth-goerli.alchemyapi.io/v2/wi9aNLc5ianem3nYTGf-G_wBzuM76DPZ');
-    this.contract = new Web3EthContract([], '0xFc4eC7908959057894A67d32aEC1123d59aE34aA', {from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174'});
+    // this.contract = new Web3EthContract([], '0xFc4eC7908959057894A67d32aEC1123d59aE34aA', {from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174'});
     // console.log('this this.contract', this.contract.methods)
+    // this.contract.methods.getBalance().call().then(res2 => console.log('this res2', res2));
     // this.contract.methods.getBalance().call({}, (err: Error, result: any) => {
     //   if (err) {
     //     console.log('this error', err.message)
@@ -38,10 +36,39 @@ export class Web3Service {
     // this.web3 = new Web3(window.ethereum);
     // console.log('this.web3', this.web3);
 
-  // @ts-ignore
-  //   this.contract = new this.web3.eth.Contract([], '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4', {from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174'});
-  //   this.contract.methods.getBalance().call().then(res => console.log('this res', res)).catch(err => console.log('this error', err.message));
-
+    // const jsonInterface = this.web3.eth.abi.encodeFunctionSignature({
+    //   name: 'getBalance',
+    //   type: 'function',
+    //   outputs: [{
+    //     type: 'uint256',
+    //     name: 'myBalance'
+    //   }]
+    // });
+    const jsonInterface: AbiItem[] = [{
+      name: "getBalance",
+      inputs: [{
+        type: 'uint256',
+        name: 'myBalance'
+      }],
+      outputs: [{
+        type: 'uint256',
+        name: 'myBalance'
+      }],
+      type: "function"
+    },
+      {
+        name: "getTicketPrice",
+        inputs: [],
+        outputs: [{
+          type: 'uint256',
+          name: 'ticketPrice'
+        }],
+        type: "function"
+      }];
+    // gwei; wie efir;
+    this.contract = new this.web3.eth.Contract(jsonInterface, '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4');
+    // this.contract = new this.web3.eth.Contract(jsonInterface, '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4', {gas: Web3.utils.toBN('900000000000000000').toNumber()});
+    this.contract.methods.getBalance().call().then((res: any) => console.log('this res', res)).catch((err: Error) => console.log('this error', err.message));
   }
 
   public runSmartContract() {
