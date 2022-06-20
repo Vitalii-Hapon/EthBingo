@@ -2,6 +2,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "esModuleInterop": true,
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
@@ -19,12 +20,39 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "assert": [
+        "./assert"
+      ],
+      "https": ["./https-browserify"],
+      "http": ["./stream-http"],
+      "os": ["./os-browserify/browser"],
+      "crypto": ["./crypto-browserify"],
+      "stream": ["./stream-browserify"],
+      "buffer": ["./buffer"],
+      "https-proxy-agent": ["./http-proxy-agent"],
+      "url": ["./url"],
+      "process": ["./process/browser"]
+    },
+    "types": ["node", "webpack-env"],
+    "typeRoots": [ "../node_modules/@types" ],
   },
   "angularCompilerOptions": {
+    "types": ["node", "webpack-env"],
+    "typeRoots": [ "../node_modules/@types" ],
+    "allowSyntheticDefaultImports": true,
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true
+    "noImplicitAny": false,
+    "strictTemplates": true,
+    "strictNullChecks": false,
+    "resolve": {
+      "alias": {
+        "stream": "stream-browserify",
+        "https": "agent-base",
+      }
+    }
   }
 }

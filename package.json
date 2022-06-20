@@ -8,6 +8,15 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
+  "browser": {
+    "os": "./node_modules/os-browserify/browser",
+    "https": "./node_modules/https-browserify",
+    "http": "./node_modules/stream-browserify",
+    "stream": "./node_modules/stream-http",
+    "util": "./node_modules/util",
+    "assert": "./node_modules/assert/",
+    "crypto": "./node_modules/crypto-browserify"
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "~12.0.3",
@@ -19,9 +28,22 @@
     "@angular/platform-browser": "~12.0.3",
     "@angular/platform-browser-dynamic": "~12.0.3",
     "@angular/router": "~12.0.3",
+    "@walletconnect/web3-provider": "^1.7.8",
+    "assert": "^2.0.0",
+    "crypto-browserify": "^3.12.0",
+    "ethers": "^5.6.9",
+    "https-browserify": "^1.0.0",
+    "https-proxy-agent": "^5.0.1",
+    "os-browserify": "^0.3.0",
     "rxjs": "~6.6.0",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
     "swiper": "^7.4.1",
     "tslib": "^2.1.0",
+    "url": "^0.11.0",
+    "util": "^0.12.4",
+    "web3": "^1.7.3",
+    "web3modal": "^1.9.8",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
@@ -29,7 +51,8 @@
     "@angular/cli": "~12.0.3",
     "@angular/compiler-cli": "~12.0.3",
     "@types/jasmine": "~3.6.0",
-    "@types/node": "^12.11.1",
+    "@types/node": "^12.20.55",
+    "@types/webpack-env": "^1.17.0",
     "karma": "~6.3.0",
     "karma-chrome-launcher": "~3.1.0",
     "karma-coverage": "~2.0.3",
