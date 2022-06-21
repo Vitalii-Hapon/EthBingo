@@ -14,6 +14,6 @@ export class DepositComponent implements OnInit {
   }
 
   makeDeposit() {
-    this.web3Service.runSmartContract();
+    this.web3Service.makeDeposit();
   }
 }

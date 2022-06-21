@@ -9,12 +9,15 @@ import { Web3Service } from "./services/web3.service";
 export class AppComponent implements OnInit{
   title = 'ethBingo';
 
+  public currentBingoBalance!: string;
+
   constructor(private web3Service: Web3Service) {
 
   }
 
-  ngOnInit(): void {
-    this.web3Service.createWeb3();
+  async ngOnInit(): Promise<void> {
+    this.web3Service.createWeb3Instances();
+    this.currentBingoBalance = await this.web3Service.getBingoBalance();
   }
 
 

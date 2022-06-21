@@ -1,19 +1,60 @@
 import { Injectable } from '@angular/core';
 import Web3 from 'web3';
 import { AbiItem } from "web3-utils";
+import { Contract } from "web3-eth-contract";
+import { WebsocketProvider } from "web3-core";
+
+const convert = require('ether-converter');
 
 @Injectable({
   providedIn: 'root'
 })
 export class Web3Service {
 
-  public web3!: Web3;
-  public contract!: any;
-  private provider: any;
+  private web3!: Web3;
+  private contract!: Contract;
+  private provider!: WebsocketProvider;
+  private jsonInterfaces: AbiItem[] = [
+    {
+      name: "getBalance",
+      type: "function",
+      inputs: [],
+      outputs: [{
+        type: 'uint256',
+        name: 'myBalance'
+      }]
+    },
+    {
+      name: "getTicketPrice",
+      type: "function",
+      inputs: [],
+      outputs: [{
+        type: 'uint256',
+        name: 'ticketPrice'
+      }]
+    },
+    {
+      name: "getAddressGameHistory",
+      type: "function",
+      inputs: [],
+      outputs: [{
+        type: 'uint8[][]',
+        name: 'history'
+      }]
+    },
+    {
+      name: "deposit",
+      type: "function",
+      inputs: [],
+      outputs: [{
+        type: 'uint256',
+        name: 'myBalance'
+      }]
+    }];
 
   constructor() { }
 
-  public createWeb3() {
+  public createWeb3Instances(): void {
     // @ts-ignore
     // if (window.ethereum) {
     // } else {
@@ -21,56 +62,40 @@ export class Web3Service {
     // }
 
     this.provider = new Web3.providers.WebsocketProvider('wss://eth-goerli.alchemyapi.io/v2/wi9aNLc5ianem3nYTGf-G_wBzuM76DPZ');
-    this.web3 = new Web3('wss://eth-goerli.alchemyapi.io/v2/wi9aNLc5ianem3nYTGf-G_wBzuM76DPZ');
-    // this.contract = new Web3EthContract([], '0xFc4eC7908959057894A67d32aEC1123d59aE34aA', {from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174'});
-    // console.log('this this.contract', this.contract.methods)
-    // this.contract.methods.getBalance().call().then(res2 => console.log('this res2', res2));
-    // this.contract.methods.getBalance().call({}, (err: Error, result: any) => {
-    //   if (err) {
-    //     console.log('this error', err.message)
-    //   }
-    //   if (result) {
-    //     console.log('this result', result)
-    //   }
-    // }).then(res2 => console.log('this res2', res2));
-    // this.web3 = new Web3(window.ethereum);
-    // console.log('this.web3', this.web3);
+    this.web3 = new Web3(this.provider);
+    this.contract = new this.web3.eth.Contract(this.jsonInterfaces, '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4');
 
-    // const jsonInterface = this.web3.eth.abi.encodeFunctionSignature({
-    //   name: 'getBalance',
-    //   type: 'function',
-    //   outputs: [{
-    //     type: 'uint256',
-    //     name: 'myBalance'
-    //   }]
-    // });
-    const jsonInterface: AbiItem[] = [{
-      name: "getBalance",
-      inputs: [{
-        type: 'uint256',
-        name: 'myBalance'
-      }],
-      outputs: [{
-        type: 'uint256',
-        name: 'myBalance'
-      }],
-      type: "function"
-    },
-      {
-        name: "getTicketPrice",
-        inputs: [],
-        outputs: [{
-          type: 'uint256',
-          name: 'ticketPrice'
-        }],
-        type: "function"
-      }];
-    // gwei; wie efir;
-    this.contract = new this.web3.eth.Contract(jsonInterface, '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4');
-    // this.contract = new this.web3.eth.Contract(jsonInterface, '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4', {gas: Web3.utils.toBN('900000000000000000').toNumber()});
-    this.contract.methods.getBalance().call().then((res: any) => console.log('this res', res)).catch((err: Error) => console.log('this error', err.message));
+
+    this.contract.defaultAccount = '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174';
+
   }
 
-  public runSmartContract() {
+  public async getBingoBalance(): Promise<string> {
+    const bingoBalanceInWei = await this.contract.methods.getBalance().call();
+    const bingoBalanceInEther = convert(bingoBalanceInWei, 'wei', 'ether');
+    console.log('this', bingoBalanceInEther);
+    return bingoBalanceInEther;
   }
+
+  public async getTicketPrice(): Promise<string> {
+    const ticketPriceInWei = await this.contract.methods.getTicketPrice().call();
+    const ticketPriceInEther = convert(ticketPriceInWei, 'wei', 'ether');
+    return ticketPriceInEther;
+  }
+
+  public async getAddressGameHistory(): Promise<string> {
+    const addressGameHistory = await this.contract.methods.getAddressGameHistory().call();
+    return addressGameHistory;
+  }
+
+  public async makeDeposit(): Promise<void> {
+    const ticketPriceInEther = await this.getTicketPrice();
+    const ticketPriceInWei = convert(ticketPriceInEther, 'ether', 'gwei');
+    console.log('this ticket privce', ticketPriceInWei);
+    const newBalanceInWei = await this.contract.methods.deposit().call({gasPrice: ticketPriceInWei});
+    const newBalanceInEther = convert(newBalanceInWei, 'wei', 'ether');
+    console.log('this', newBalanceInEther);
+    return newBalanceInEther;
+  }
+
 }

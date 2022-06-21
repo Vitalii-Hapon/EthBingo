@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { GameTime } from "../../models/models";
 import { interval, Observable, Subject } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
+import { Web3Service } from "../../services/web3.service";
 
 const LimitForCountDown = 10;
 
@@ -25,7 +26,9 @@ export class RoomComponent implements OnInit, OnDestroy {
   public ticket = [Array.from({length: 9}, () => Math.floor(Math.random() * 40)), Array.from({length: 9}, () => Math.floor(Math.random() * 40)), Array.from({length: 9}, () => Math.floor(Math.random() * 40))];
 
 
+  public ticketPrice!: string;
   constructor(
+    private web3Service: Web3Service,
   ) { }
 
   public get isWonTime(): boolean {
@@ -62,7 +65,12 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.initialize();
   }
 
+  private async getTicketPrice(): Promise<void> {
+    this.ticketPrice = await this.web3Service.getTicketPrice();
+  }
+
   private initialize(): void {
+    this.getTicketPrice();
     this.currentGameTime = GameTime.BuyTime;
     this.stopPlayTime$ = new Subject();
     this.stopCountDown$ = new Subject();
