@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Web3Service } from "./services/web3.service";
+import { BalanceService } from "./services/balance.service";
+import { Observable } from "rxjs";
 
 @Component({
   selector: 'app-root',
@@ -9,16 +11,17 @@ import { Web3Service } from "./services/web3.service";
 export class AppComponent implements OnInit{
   title = 'ethBingo';
 
-  public currentBingoBalance!: string;
+  public currentBingoBalance$: Observable<string> = this.balanceService.balance$;
 
-  constructor(private web3Service: Web3Service) {
+  constructor(
+    private web3Service: Web3Service,
+    private balanceService: BalanceService,
+    ) {
 
   }
 
   async ngOnInit(): Promise<void> {
     this.web3Service.createWeb3Instances();
-    this.currentBingoBalance = await this.web3Service.getBingoBalance();
   }
-
 
 }

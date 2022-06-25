@@ -5,7 +5,7 @@
   </mat-toolbar-row>
   <mat-toolbar-row class="row">
     <button mat-raised-button color="primary" class="h5" [routerLink]="'deposit'">Deposit</button>
-    <span>{{currentBingoBalance}} <i class='fab fa-ethereum' style='font-size:24px'></i></span>
+    <span>{{currentBingoBalance$ | async}} <i class='fab fa-ethereum' style='font-size:24px'></i></span>
   </mat-toolbar-row>
 </mat-toolbar>
 <div class="content-folder">
