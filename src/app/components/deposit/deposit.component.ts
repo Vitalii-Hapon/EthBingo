@@ -13,7 +13,12 @@ export class DepositComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  makeDeposit() {
+  public makeDeposit(): void {
     this.web3Service.makeDeposit();
+  }
+
+
+  public withdrawMoney(): void {
+    this.web3Service.withdraw();
   }
 }

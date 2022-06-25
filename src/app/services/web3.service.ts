@@ -83,8 +83,12 @@ export class Web3Service {
       this.jsonInterfaces,
       '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4', {
         gasPrice: '40000',
-        gas: 40000
+        gas: 40000,
+        from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174',
       });
+    // this.contract.options.gas = 40000;
+    // this.contract.options.gasPrice = '40000';
+    // this.contract.options.from = '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4';
 
     this.setAccountDetails();
     this.getBingoBalance();
@@ -112,77 +116,24 @@ export class Web3Service {
     return addressGameHistory;
   }
 
-  private onErrorCallback(functionName: string, error: Error) {
-    console.warn(`We\`ve got an error, while making ${functionName}:`, error.name, error.message);
-  }
-
-  private onSentTransactionCallback() {
-    this.balanceService.startUpdatingBalanceProcess();
-  }
-
-  public async makeDeposit(value: string): Promise<void> {
-    // this.contract.methods.withdraw().send({from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174', gasPrice: 40000, gas: 40000})
-    this.contract.methods.deposit().send({value: value})
+  public async makeDeposit(value: string = this.web3.utils.toWei('0.005', 'ether')): Promise<void> {
+    this.contract.methods.deposit().send({value: value, gas: 50000, gasPrice: 50000})
       .on('sent', (_: any) => this.onSentTransactionCallback())
-      .on('receipt', (receipt: any) => {
-        console.log('this receipt', receipt);
+      .on('receipt', (_: any) => this.getBingoBalance())
+      .on('error', (error: Error) => {
+        this.onErrorCallback('makeDeposit', error);
         this.getBingoBalance();
-      })
-      .on('error', (error: Error) => this.onErrorCallback('makeDeposit', error));
-    // const ticketPriceInEther = await this.getTicketPrice();
-    // const ticketPriceInWei = convert(ticketPriceInEther, 'ether', 'wei');
-    // console.time('start transaction')
-    // console.log('this ticket privce', ticketPriceInWei, typeof ticketPriceInWei);
-    // // const newBalanceInWei = await this.web3.eth.sendTransaction({
-    // this.web3.eth.sendTransaction({
-    //   from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174',
-    //   to: '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4',
-    //   value: this.web3.utils.toWei('0.005', 'ether'),
-    //   gasPrice: 40000,
-    //   gas: 40000,
-    // }).on('transactionHash', (hash: any) => {
-    //   console.log('this transactionHash', hash);
-    //   console.timeLog('start transaction');
-    // })
-    //   .on('confirmation', (confirmationNumber: any, receipt: any) => {
-    //     console.log('this confirmation', confirmationNumber, receipt);
-    //     console.timeLog('start transaction');
-    //   })
-    //   .on('receipt', (receipt: any) => {
-    //     console.log('this receipt', receipt);
-    //     console.timeLog('start transaction');
-    //   })
-    //   .on('error', (error: any) => {
-    //     console.log('this error', error);
-    //     console.timeLog('start transaction');
-    //   });
-    // const newBalanceInWei = await this.contract.methods.deposit().send({gasPrice: ticketPriceInWei, from: this.contract.defaultAccount});
-    // console.log('this newBalanceInWei', newBalanceInWei, JSON.stringify(newBalanceInWei));
-    // this.contract.methods.deposit()
-    //   .send({gasPrice: ticketPriceInWei, from: this.contract.defaultAccount})
-    //   .on('transactionHash', (hash: any) => {
-    //     console.log('this transactionHash', hash);
-    //   })
-    //   .on('confirmation', (confirmationNumber: any, receipt: any) => {
-    //     console.log('this confirmation', confirmationNumber, receipt);
-    //   })
-    //   .on('receipt', (receipt: any) => {
-    //     console.log('this receipt', receipt);
-    //   })
-    //   .on('error', (error: any) => {
-    //     console.log('this error', error);
-    //   });
-    // const newBalanceInEther = convert(newBalanceInWei, 'wei', 'ether');
-    // console.log('this', newBalanceInEther);
-    // return newBalanceInEther;
+      });
   }
-
 
   public async withdraw(): Promise<void> {
     this.contract.methods.withdraw().send()
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('receipt', (_: any) => this.getBingoBalance())
-      .on('error', (error: Error) => this.onErrorCallback('withdraw', error));
+      .on('error', (error: Error) => {
+        this.onErrorCallback('withdraw', error);
+        this.getBingoBalance();
+      });
   }
 
   public getAccount() {
@@ -202,6 +153,14 @@ export class Web3Service {
       // @ts-ignore
       window.ethereum.request({method: eth_requestAccounts}).then(res => console.log('this acc', res));
     }
+  }
+
+  private onErrorCallback(functionName: string, error: Error) {
+    console.warn(`We\`ve got an error, while making ${functionName}:`, error.name, error.message);
+  }
+
+  private onSentTransactionCallback() {
+    this.balanceService.startUpdatingBalanceProcess();
   }
 
 }
