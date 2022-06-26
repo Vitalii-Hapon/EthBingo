@@ -1,10 +1,13 @@
-<mat-toolbar >
+<mat-toolbar>
   <mat-toolbar-row class="row">
-  <button mat-button class="h4" [routerLink]="''" style="margin-left: -15px">EtherBingo</button>
-  <button mat-mini-fab color="primary" [routerLink]="'sing-out'"><mat-icon>account_circle</mat-icon></button>
+    <button mat-raised-button color="primary" class="h5" [routerLink]="'main-page'" routerLinkActive="invisible">Main</button>
+    <button mat-button class="h4" [routerLink]="''" style="margin-left: -15px">EtherBingo</button>
+    <button mat-mini-fab color="primary" [routerLink]="'sing-out'">
+      <mat-icon>account_circle</mat-icon>
+    </button>
   </mat-toolbar-row>
   <mat-toolbar-row class="row">
-    <button mat-raised-button color="primary" class="h5" [routerLink]="'deposit'">Deposit</button>
+    <button mat-raised-button color="primary" class="h5" [routerLink]="'wallet'" routerLinkActive="invisible">Wallet</button>
     <span>{{currentBingoBalance$ | async}} <i class='fab fa-ethereum' style='font-size:24px'></i></span>
   </mat-toolbar-row>
 </mat-toolbar>

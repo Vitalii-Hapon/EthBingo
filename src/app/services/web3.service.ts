@@ -4,8 +4,7 @@ import { AbiItem } from "web3-utils";
 import { Contract } from "web3-eth-contract";
 import { WebsocketProvider } from "web3-core";
 import { BalanceService } from "./balance.service";
-
-const convert = require('ether-converter');
+import { TicketPriceService } from "./ticket-price.service";
 
 @Injectable({
   providedIn: 'root'
@@ -64,6 +63,7 @@ export class Web3Service {
 
   constructor(
     private balanceService: BalanceService,
+    private ticketPriceService: TicketPriceService,
   ) { }
 
   public createWeb3Instances(): void {
@@ -92,6 +92,7 @@ export class Web3Service {
 
     this.setAccountDetails();
     this.getBingoBalance();
+    this.getTicketPrice();
   }
 
   public setAccountDetails(): void {
@@ -101,14 +102,14 @@ export class Web3Service {
 
   public async getBingoBalance(): Promise<void> {
     const bingoBalanceInWei = await this.contract.methods.getBalance().call();
-    const bingoBalanceInEther = convert(bingoBalanceInWei, 'wei', 'ether');
+    const bingoBalanceInEther = Web3Service.convertToEther(bingoBalanceInWei);
     this.balanceService.updateBalance$(bingoBalanceInEther);
   }
 
-  public async getTicketPrice(): Promise<string> {
+  public async getTicketPrice(): Promise<void> {
     const ticketPriceInWei = await this.contract.methods.getTicketPrice().call();
-    const ticketPriceInEther = convert(ticketPriceInWei, 'wei', 'ether');
-    return ticketPriceInEther;
+    const ticketPriceInEther = Web3Service.convertToEther(ticketPriceInWei);
+    this.ticketPriceService.updateTicketPrice$(ticketPriceInEther);
   }
 
   public async getAddressGameHistory(): Promise<string> {
@@ -116,12 +117,13 @@ export class Web3Service {
     return addressGameHistory;
   }
 
-  public async makeDeposit(value: string = this.web3.utils.toWei('0.005', 'ether')): Promise<void> {
-    this.contract.methods.deposit().send({value: value, gas: 50000, gasPrice: 50000})
+  public async makeDeposit(valueInEther: string): Promise<void> {
+    const valueInWei = Web3Service.convertToWei(valueInEther);
+    this.contract.methods.deposit().send({value: valueInWei, gas: 50000, gasPrice: 50000})
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('receipt', (_: any) => this.getBingoBalance())
       .on('error', (error: Error) => {
-        this.onErrorCallback('makeDeposit', error);
+        Web3Service.onErrorCallback('makeDeposit', error);
         this.getBingoBalance();
       });
   }
@@ -131,7 +133,7 @@ export class Web3Service {
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('receipt', (_: any) => this.getBingoBalance())
       .on('error', (error: Error) => {
-        this.onErrorCallback('withdraw', error);
+        Web3Service.onErrorCallback('withdraw', error);
         this.getBingoBalance();
       });
   }
@@ -155,7 +157,19 @@ export class Web3Service {
     }
   }
 
-  private onErrorCallback(functionName: string, error: Error) {
+  public static convertToWei(valueInEther: string): string {
+    return Web3.utils.toWei(valueInEther, 'ether');
+  }
+
+  public static convertToEther(valueInWei: string): string {
+    return Web3.utils.fromWei(valueInWei, 'ether');
+  }
+
+  public static convertToBigint(valueInEther: string): BigInt {
+    return BigInt(this.convertToWei(valueInEther));
+  }
+
+  private static onErrorCallback(functionName: string, error: Error) {
     console.warn(`We\`ve got an error, while making ${functionName}:`, error.name, error.message);
   }
 

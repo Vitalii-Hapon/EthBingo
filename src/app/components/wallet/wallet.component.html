@@ -1,0 +1,6 @@
+<p>Ticket Price is: {{ticketPrice}}<i class='fab fa-ethereum'></i></p>
+<button mat-raised-button color="primary" class="h6" [disabled]="!ticketPriceAsBigInt" (click)="makeDeposit(getDepositValue(1))"><p>{{getDepositPrice(1)}}<i class='fab fa-ethereum'></i></p></button>
+<button mat-raised-button color="primary" class="h6" [disabled]="!ticketPriceAsBigInt" (click)="makeDeposit(getDepositValue(2))"><p>{{getDepositPrice(2)}}<i class='fab fa-ethereum'></i></p></button>
+<button mat-raised-button color="primary" class="h6" [disabled]="!ticketPriceAsBigInt" (click)="makeDeposit(getDepositValue(3))"><p>{{getDepositPrice(3)}}<i class='fab fa-ethereum'></i></p></button>
+<button mat-raised-button color="primary" class="h6" [disabled]="!ticketPriceAsBigInt" (click)="makeDeposit(getDepositValue(4))"><p>{{getDepositPrice(4)}}<i class='fab fa-ethereum'></i></p></button>
+<button mat-raised-button color="primary" class="h6" [disabled]="balanceIsNegative(balance$ | async)" (click)="withdrawMoney()">Withdraw money</button>

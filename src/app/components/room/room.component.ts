@@ -3,8 +3,10 @@ import { GameTime } from "../../models/models";
 import { interval, Observable, Subject } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
 import { Web3Service } from "../../services/web3.service";
+import { BalanceService } from "../../services/balance.service";
+import { TicketPriceService } from "../../services/ticket-price.service";
 
-const LimitForCountDown = 10;
+const LimitForCountDown = 3;
 
 const Boards = [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}, {id: 7}, {id: 8}, {id: 9}, {id: 10}];
 const calledBalls = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
@@ -19,17 +21,32 @@ export class RoomComponent implements OnInit, OnDestroy {
   public timeToStart!: number;
   public calledBalls: number[] = [];
   public boards = Boards;
-  public boughTickets = 1;
+  // public boughTickets = 1;
   private currentGameTime!: GameTime;
   private stopCountDown$!: Subject<any>;
   private stopPlayTime$!: Subject<any>;
-  public ticket = [Array.from({length: 9}, () => Math.floor(Math.random() * 40)), Array.from({length: 9}, () => Math.floor(Math.random() * 40)), Array.from({length: 9}, () => Math.floor(Math.random() * 40))];
+  public ticket = Array.from({length: 5}, () => Array.from({length: 5}, () => Math.floor(Math.random() * 40)));
+  // public ticket = [
+  //   Array.from({length: 5}, () => Math.floor(Math.random() * 40)),
+  //   Array.from({length: 5}, () => Math.floor(Math.random() * 40)),
+  //   Array.from({length: 9}, () => Math.floor(Math.random() * 40))];
 
 
-  public ticketPrice!: string;
+  public ticketPrice$: Observable<string> = this.ticketPriceService.ticketPrice$;
+  public balanceIsUpdated$: Observable<boolean> = this.balanceService.balanceIsIsUpdated$;
+  public balance$: Observable<string> = this.balanceService.balance$;
+
   constructor(
     private web3Service: Web3Service,
+    private balanceService: BalanceService,
+    private ticketPriceService: TicketPriceService,
   ) { }
+
+  public balanceValueIsEnough(balanceInEther: string = '0,00108', ticketPriceInEther: string = '0,00108'): boolean {
+    const balanceAsBigint = Web3Service.convertToBigint(balanceInEther);
+    const ticketPriceAsBigint = Web3Service.convertToBigint(ticketPriceInEther);
+    return balanceAsBigint >= ticketPriceAsBigint;
+  }
 
   public get isWonTime(): boolean {
     return this.currentGameTime === GameTime.Won
@@ -65,12 +82,7 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.initialize();
   }
 
-  private async getTicketPrice(): Promise<void> {
-    this.ticketPrice = await this.web3Service.getTicketPrice();
-  }
-
   private initialize(): void {
-    this.getTicketPrice();
     this.currentGameTime = GameTime.BuyTime;
     this.stopPlayTime$ = new Subject();
     this.stopCountDown$ = new Subject();

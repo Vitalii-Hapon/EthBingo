@@ -10,7 +10,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { RoomComponent } from './components/room/room.component';
 import { SignInComponent } from './components/sign-in/sign-in.component';
 import { SignOutComponent } from './components/sign-out/sign-out.component';
-import { DepositComponent } from './components/deposit/deposit.component';
+import { WalletComponent } from './components/wallet/wallet.component';
 import { MainPageComponent } from './components/main-page/main-page.component';
 import { AppRouting } from "./app-routing.module";
 import { MatCardModule } from "@angular/material/card";
@@ -22,7 +22,7 @@ import { SwiperModule } from "swiper/angular";
     RoomComponent,
     SignInComponent,
     SignOutComponent,
-    DepositComponent,
+    WalletComponent,
     MainPageComponent
   ],
   imports: [

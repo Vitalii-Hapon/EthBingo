@@ -16,6 +16,7 @@ export class AppComponent implements OnInit{
   constructor(
     private web3Service: Web3Service,
     private balanceService: BalanceService,
+
     ) {
 
   }
