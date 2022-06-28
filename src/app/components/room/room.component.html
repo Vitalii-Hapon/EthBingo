@@ -1,116 +1,74 @@
-<ng-container *ngIf="isBuyTime">
-  <!--  <p class="row h4 text-center">Current ticket price: {{ticketPrice}} <i class='fab fa-ethereum' style='font-size:24px'></i></p>-->
-  <p *ngIf="!(balanceIsUpdated$ | async); else balanceUpdated"> Wait, until balance would be updated</p>
+<ng-container #swiperContainer>
+  <ng-container *ngIf="isBuyTime">
+    <!--  <p class="row h4 text-center">Current ticket price: {{ticketPrice}} <i class='fab fa-ethereum' style='font-size:24px'></i></p>-->
+    <p *ngIf="!((balanceIsUpdated$ | async) && (ticketIsUpdated$ | async)); else balanceUpdated" class="h4"> Wait, until
+      balance
+      would be updated</p>
 
-  <ng-template #balanceUpdated>
-    <button mat-raised-button color="primary" class="h6" (click)="startGame()"
-            *ngIf="balanceValueIsEnough(balance$ | async, ticketPrice$ | async); else GoToWallet">Play game
-    </button>
-    <ng-template #GoToWallet>
-      <p>Not enough money, please, make a deposit</p>
-      <button mat-raised-button color="primary" class="h5" [routerLink]="'wallet'">Go to Wallet</button>
+    <ng-template #balanceUpdated>
+      <button mat-raised-button color="primary" class="h6" (click)="startGame()"
+              *ngIf="balanceValueIsEnough(balance$ | async, ticketPrice$ | async); else GoToWallet">Play game
+      </button>
+      <ng-template #GoToWallet>
+        <p>Not enough money, please, make a deposit</p>
+        <button mat-raised-button color="primary" class="h5" [routerLink]="'/wallet'">Go to Wallet</button>
+      </ng-template>
     </ng-template>
-  </ng-template>
-</ng-container>
+  </ng-container>
 
-<ng-container *ngIf="isCountDownTime">
-  <p class="row h4 text-center">Time to start: {{timeToStart}}</p>
-  <!--  <p class="row h4">Yo have: {{boughTickets}} bought tickets</p>-->
-</ng-container>
+  <ng-container *ngIf="isCountDownTime">
+    <span class="row h4 text-center">Time to start: {{timeToStart}}</span>
+    <!--  <p class="row h4">Yo have: {{boughTickets}} bought tickets</p>-->
+  </ng-container>
 
-<ng-container *ngIf="isPlayTime">
-  <p class="row h4 text-center">calledBalls</p>
-  <swiper [direction]="'horizontal'" [slidesPerView]="9">
-    <ng-template swiperSlide *ngFor="let balls of calledBalls">
-      <div class="number">
-        {{balls}}
+  <ng-container *ngIf="isPlayTime || isWonTime">
+    <ng-container *ngIf="!showStartNewGame; else startNewGameContainer">
+      <div class="row h5 text-center called-balls-title">Called Balls</div>
+      <div class="calls-wrapper">
+        <div class="empty-numbers" *ngIf="calledBalls.length === 0; else calledBallsRange"></div>
+        <ng-template #calledBallsRange>
+          <swiper [config]="callsSwiperConfig" class="calls">
+            <ng-template swiperSlide *ngFor="let balls of calledBalls">
+              <div class="number">
+                {{balls}}
+              </div>
+            </ng-template>
+          </swiper>
+        </ng-template>
       </div>
+    </ng-container>
+
+    <ng-template #startNewGameContainer>
+      <button mat-raised-button color="primary" class="h6 mt1" (click)="startNewGame()">Start new game</button>
     </ng-template>
-  </swiper>
 
-  <mat-card>
-    <mat-card-title class="text-center">
-      Board 1
-    </mat-card-title>
-    <mat-card-content class="board">
-      <div *ngFor="let row of ticket" class="row">
-        <div *ngFor="let number of row; let i = index; trackBy: trackByNumber" class="number"
-             [ngClass]="{'warn': ballIsCalled(number)}">
-          {{number}}
-        </div>
+    <swiper [config]="boardsSwiperConfig" class="boards">
+      <ng-template swiperSlide *ngFor="let board of boards; let i = index">
+        <mat-card>
+          <mat-card-subtitle class="text-center">
+            Board {{i + 1}}
+          </mat-card-subtitle>
+          <mat-card-content class="board">
+            <div *ngFor="let row of board" class="row">
+              <div *ngFor="let number of row; let i = index; trackBy: trackByNumber" class="number"
+                   [ngClass]="{'warn': ballIsCalled(number)}">
+                {{number}}
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </ng-template>
+    </swiper>
+  </ng-container>
+
+  <ng-container *ngIf="isWonTime">
+    <div class="win-popup">
+      <div class="popup-content mat-app-background">
+        <p class="row h4 mat-primary text-center">Congratulate! You won</p>
+        <button mat-raised-button color="primary" class="h6" [routerLink]="''">Back to main page</button>
+        <button mat-raised-button color="primary" class="h6" (click)="startNewGame()">Start new game</button>
+        <button mat-raised-button color="primary" class="h6" (click)="closeWin()">Close</button>
       </div>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card>
-    <mat-card-title class="text-center">
-      Board 2
-    </mat-card-title>
-    <mat-card-content class="board">
-      <div *ngFor="let row of ticket" class="row">
-        <div *ngFor="let number of row; let i = index; trackBy: trackByNumber" class="number"
-             [ngClass]="{'warn': ballIsCalled(number)}">
-          {{number}}
-        </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card>
-    <mat-card-title class="text-center">
-      Board 3
-    </mat-card-title>
-    <mat-card-content class="board">
-      <div *ngFor="let row of ticket" class="row">
-        <div *ngFor="let number of row; let i = index; trackBy: trackByNumber" class="number"
-             [ngClass]="{'warn': ballIsCalled(number)}">
-          {{number}}
-        </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-<!--  <mat-card>-->
-<!--    <mat-card-title class="text-center">-->
-<!--      Board 4-->
-<!--    </mat-card-title>-->
-<!--    <mat-card-content class="board">-->
-<!--      <div *ngFor="let row of ticket" class="row">-->
-<!--        <div *ngFor="let number of row; let i = index; trackBy: trackByNumber" class="number"-->
-<!--             [ngClass]="{'warn': ballIsCalled(number)}">-->
-<!--          {{number}}-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </mat-card-content>-->
-<!--  </mat-card>-->
-
-<!--  <mat-card>-->
-<!--    <mat-card-title class="text-center">-->
-<!--      Board 5-->
-<!--    </mat-card-title>-->
-<!--    <mat-card-content class="board">-->
-<!--      <div *ngFor="let row of ticket" class="row">-->
-<!--        <div *ngFor="let number of row; let i = index; trackBy: trackByNumber" class="number"-->
-<!--             [ngClass]="{'warn': ballIsCalled(number)}">-->
-<!--          {{number}}-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </mat-card-content>-->
-<!--  </mat-card>-->
-
-<!--  <swiper [direction]="'horizontal'" [slidesPerView]="5">-->
-<!--    <ng-template swiperSlide *ngFor="let board of boards">-->
-<!--      <mat-card>-->
-<!--        <mat-card-header>-->
-<!--          {{board.id}}-->
-<!--        </mat-card-header>-->
-<!--      </mat-card>-->
-<!--    </ng-template>-->
-<!--  </swiper>-->
-</ng-container>
-
-<ng-container *ngIf="isWonTime">
-  <p class="row h4 mat-primary text-center">Congratulate! You won</p>
-  <button mat-raised-button color="primary" class="h6" [routerLink]="''">Back to main page</button>
-  <button mat-raised-button color="primary" class="h6" (click)="startNewGame()">Start new game</button>
+    </div>
+  </ng-container>
 </ng-container>
