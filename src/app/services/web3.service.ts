@@ -6,6 +6,16 @@ import { WebsocketProvider } from "web3-core";
 import { BalanceService } from "./balance.service";
 import { TicketPriceService } from "./ticket-price.service";
 
+interface IWeb3Error extends Error {
+  reason: string;
+  receipt: any;
+}
+
+interface IWeb3Window extends Window {
+  ethereum: any;
+  web3: any;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -15,6 +25,21 @@ export class Web3Service {
   private contract!: Contract;
   private provider!: WebsocketProvider;
   private jsonInterfaces: AbiItem[] = [
+    {
+      name: "PlayerBalanceChanged",
+      type: "event",
+      inputs: [{
+        type: 'address',
+        name: 'recipient'
+      },{
+        type: 'uint256',
+        name: 'recipientBalance',
+      }],
+      outputs: [{
+        type: 'uint256',
+        name: 'myBalance'
+      }]
+    },
     {
       name: "getBalance",
       type: "function",
@@ -59,6 +84,15 @@ export class Web3Service {
         type: 'bool',
         name: 'isWithdrawSuccess'
       }]
+    },
+    {
+      name: "play",
+      type: "function",
+      inputs: [{
+        type: 'uint8',
+        name: 'ticketAmount'
+      }],
+      outputs: []
     }];
 
   constructor(
@@ -67,12 +101,11 @@ export class Web3Service {
   ) { }
 
   public createWeb3Instances(): void {
-    // @ts-ignore
-    if (window.ethereum) {
-      // @ts-ignore
-      console.log('this account', window.ethereum.currentProvider)
-      // @ts-ignore
-      console.log('this window vw3', window.web3)
+    const web3window = <IWeb3Window><unknown>window;
+
+    if (web3window.ethereum) {
+      console.log('this account', web3window.ethereum.currentProvider)
+      console.log('this window vw3', web3window)
     } else {
       window.alert('please, install MetaMask extension on your browser and then continue');
     }
@@ -81,11 +114,12 @@ export class Web3Service {
     this.web3 = new Web3(this.provider);
     this.contract = new this.web3.eth.Contract(
       this.jsonInterfaces,
-      '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4', {
+      '0xF7a5E70D1236C4CCdfBacdF0E13056149A5f98E8', {
         gasPrice: '40000',
         gas: 40000,
         from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174',
       });
+    this.web3.eth.handleRevert = true;
     // this.contract.options.gas = 40000;
     // this.contract.options.gasPrice = '40000';
     // this.contract.options.from = '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4';
@@ -102,8 +136,25 @@ export class Web3Service {
 
   public async getBingoBalance(): Promise<void> {
     const bingoBalanceInWei = await this.contract.methods.getBalance().call();
-    const bingoBalanceInEther = Web3Service.convertToEther(bingoBalanceInWei);
+    this.handleDepositUpdate(bingoBalanceInWei);
+  }
+
+  private handleDepositUpdate(balanceInWei: string) {
+    const bingoBalanceInEther = Web3Service.convertToEther(balanceInWei);
     this.balanceService.updateBalance$(bingoBalanceInEther);
+  }
+
+  public onBalanceEvent() {
+    this.contract.events.PlayerBalanceChanged({
+      filter: {recipient: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174'},
+    }, (err: IWeb3Error, event: any) => {
+      if (err) {
+        Web3Service.onErrorCallback('getting balance update', err);
+      }
+      if (event) {
+        this.handleDepositUpdate(event.returnValues.recipientBalance);
+      }
+    });
   }
 
   public async getTicketPrice(): Promise<void> {
@@ -117,13 +168,21 @@ export class Web3Service {
     return addressGameHistory;
   }
 
+  public play(tickets: number) {
+    this.contract.methods.play(tickets).send()
+      .on('sent', (_: any) => this.onSentTransactionCallback())
+      .on('error', (error: IWeb3Error) => {
+        Web3Service.onErrorCallback('starting game', error);
+        this.getBingoBalance();
+      });
+  }
+
   public async makeDeposit(valueInEther: string): Promise<void> {
     const valueInWei = Web3Service.convertToWei(valueInEther);
     this.contract.methods.deposit().send({value: valueInWei, gas: 50000, gasPrice: 50000})
       .on('sent', (_: any) => this.onSentTransactionCallback())
-      .on('receipt', (_: any) => this.getBingoBalance())
-      .on('error', (error: Error) => {
-        Web3Service.onErrorCallback('makeDeposit', error);
+      .on('error', (error: IWeb3Error) => {
+        Web3Service.onErrorCallback('making the deposit', error);
         this.getBingoBalance();
       });
   }
@@ -131,9 +190,8 @@ export class Web3Service {
   public async withdraw(): Promise<void> {
     this.contract.methods.withdraw().send()
       .on('sent', (_: any) => this.onSentTransactionCallback())
-      .on('receipt', (_: any) => this.getBingoBalance())
-      .on('error', (error: Error) => {
-        Web3Service.onErrorCallback('withdraw', error);
+      .on('error', (error: IWeb3Error) => {
+        Web3Service.onErrorCallback('making the withdraw', error);
         this.getBingoBalance();
       });
   }
@@ -169,12 +227,21 @@ export class Web3Service {
     return BigInt(this.convertToWei(valueInEther));
   }
 
-  private static onErrorCallback(functionName: string, error: Error) {
-    console.warn(`We\`ve got an error, while making ${functionName}:`, error.name, error.message);
+  private static onErrorCallback(functionName: string, error: IWeb3Error) {
+    if (error.reason) {
+      console.warn(`We\`ve got an error, during ${functionName}.`, `Error Reason: ${error.reason}`);
+    } else {
+      console.warn(`We\`ve got an error, during ${functionName}.`, `Error Message: ${error.message}`);
+    }
   }
 
   private onSentTransactionCallback() {
     this.balanceService.startUpdatingBalanceProcess();
+  }
+
+
+  private onSentTransactionCallbackLog(event: string, data: any) {
+    console.log(event, 'data', data);
   }
 
 }

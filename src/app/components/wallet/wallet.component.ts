@@ -51,7 +51,7 @@ export class WalletComponent implements OnInit, OnDestroy {
 
   public getDepositPrice(multiplier: number): string {
     const depositValue = this.ticketPriceIsGot ? this.getDepositValue(multiplier) : this.ticketPrice;
-    return `Make deposit for ${multiplier} ticket${multiplier > 1 ? 's' : ''} - ${depositValue}`;
+    return `Make deposit - ${depositValue}`;
   }
 
   public getDepositValue(multiplier: number): string {
@@ -65,5 +65,9 @@ export class WalletComponent implements OnInit, OnDestroy {
 
   public balanceIsNegative(balance: string): boolean {
     return !Number(balance);
+  }
+
+  public depositIsDisable(balance: string, ticketPriceAsBigInt: BigInt): boolean {
+    return !(ticketPriceAsBigInt && Number(balance));
   }
 }
