@@ -22,23 +22,25 @@
   </ng-container>
 
   <ng-container *ngIf="isPlayTime || isWonTime">
-      <div class="row h5 text-center called-balls-title">Called Balls</div>
-      <div class="calls-wrapper">
-        <div class="empty-numbers" *ngIf="calledBalls.length === 0; else calledBallsRange"></div>
-        <ng-template #calledBallsRange>
-          <swiper [config]="callsSwiperConfig" class="calls">
-            <ng-template swiperSlide *ngFor="let balls of calledBalls">
-              <div class="number">
-                {{balls}}
-              </div>
-            </ng-template>
-          </swiper>
-        </ng-template>
-      </div>
+    <button *ngIf="showStartNewGame" mat-raised-button color="primary" class="h6 mt1"
+            (click)="startNewGame()">
+      Start new game
+    </button>
 
-    <ng-template *ngIf="showStartNewGame">
-      <button mat-raised-button color="primary" class="h6 mt1" (click)="startNewGame()">Start new game</button>
-    </ng-template>
+    <div class="row h5 text-center called-balls-title">Called Balls</div>
+    <div class="calls-wrapper">
+      <div class="empty-numbers" *ngIf="calledBalls.length === 0; else calledBallsRange"></div>
+      <ng-template #calledBallsRange>
+        <swiper [config]="callsSwiperConfig" class="calls">
+          <ng-template swiperSlide *ngFor="let balls of calledBalls">
+            <div class="number">
+              {{balls}}
+            </div>
+          </ng-template>
+        </swiper>
+      </ng-template>
+    </div>
+
 
     <swiper [config]="boardsSwiperConfig" class="boards">
       <ng-template swiperSlide *ngFor="let board of boards; let i = index">
@@ -60,9 +62,9 @@
   </ng-container>
 
   <ng-container *ngIf="isWonTime">
-    <div class="win-popup">
+    <div class="popup-wrapper">
       <div class="popup-content mat-app-background">
-        <p class="row h4 mat-primary text-center">Congratulate! You won</p>
+        <p class="row h4 mat-primary text-center popup-title">Congratulate! You won</p>
         <button mat-raised-button color="primary" class="h6" [routerLink]="''">Back to main page</button>
         <button mat-raised-button color="primary" class="h6" (click)="startNewGame()">Start new game</button>
         <button mat-raised-button color="primary" class="h6" (click)="closeWin()">Close</button>

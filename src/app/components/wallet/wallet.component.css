@@ -1,3 +1,7 @@
+:host {
+  grid-gap: 1.5rem;
+}
+
 .button-content {
   display: flex;
   align-items: baseline;

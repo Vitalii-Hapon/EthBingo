@@ -15,6 +15,8 @@ export class WalletComponent implements OnInit, OnDestroy {
   public ticketPriceAsBigInt!: BigInt;
   public ticketPriceIsGot: boolean = false;
   public balance$: Observable<string> = this.balanceService.balance$;
+  public promocode: boolean = false;
+  public promocodeValue: string = '';
 
   private ngUnsubscribe: Subject<any> = new Subject<any>();
 
@@ -69,5 +71,18 @@ export class WalletComponent implements OnInit, OnDestroy {
 
   public depositIsDisable(balance: string, ticketPriceAsBigInt: BigInt): boolean {
     return !(ticketPriceAsBigInt && Number(balance));
+  }
+
+  public usePromocode(): void {
+    this.promocode = true;
+  }
+
+  public sendPromocode(): void {
+    this.web3Service.sendPromocode(this.promocodeValue);
+    this.closePromocode();
+  }
+
+  public closePromocode(): void {
+    this.promocode = false;
   }
 }

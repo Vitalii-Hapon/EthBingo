@@ -1,42 +1,69 @@
-<p>Ticket Price is: {{ticketPrice}}<i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i></p>
+<ng-container *ngIf="promocode; else elseZone">
+  <div class="popup-wrapper">
+    <div class="popup-content mat-app-background">
+      <mat-form-field class="example-form-field" appearance="fill">
+        <mat-label class="popup-title">insert your promocode</mat-label>
+        <input matInput type="text" [(ngModel)]="promocodeValue">
+        <button *ngIf="promocodeValue" matSuffix mat-icon-button aria-label="Clear" (click)="promocodeValue=''">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+        <button mat-raised-button color="primary" class="h6" (click)="sendPromocode()">Send Promocode</button>
+        <button mat-raised-button color="primary" class="h6" (click)="closePromocode()">Close</button>
+    </div>
+  </div>
+</ng-container>
 
-<button mat-raised-button color="primary" class="h6"
-        [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
-        (click)="makeDeposit(getDepositValue(1))">
+<ng-template #elseZone>
+
+
+  <p>Ticket Price is: {{ticketPrice}}<i class='fab fa-ethereum' *ngIf="ticketPriceAsBigInt"></i></p>
+
+  <button mat-raised-button color="primary" class="h6"
+          [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
+          (click)="usePromocode()">
+    I have a Promocode
+  </button>
+
+
+  <button mat-raised-button color="primary" class="h6"
+          [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
+          (click)="makeDeposit(getDepositValue(1))">
   <span class="button-content">
     {{getDepositPrice(1)}}
-    <i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i>
+    <i class='fab fa-ethereum' *ngIf="ticketPriceAsBigInt"></i>
   </span>
-</button>
+  </button>
 
-<button mat-raised-button color="primary" class="h6"
-        [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
-        (click)="makeDeposit(getDepositValue(2))">
+  <button mat-raised-button color="primary" class="h6"
+          [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
+          (click)="makeDeposit(getDepositValue(2))">
   <span class="button-content">
     {{getDepositPrice(2)}}
-    <i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i>
+    <i class='fab fa-ethereum' *ngIf="ticketPriceAsBigInt"></i>
   </span>
-</button>
+  </button>
 
-<button mat-raised-button color="primary" class="h6"
-        [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
-        (click)="makeDeposit(getDepositValue(3))">
+  <button mat-raised-button color="primary" class="h6"
+          [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
+          (click)="makeDeposit(getDepositValue(3))">
   <span class="button-content">
     {{getDepositPrice(3)}}
-    <i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i>
+    <i class='fab fa-ethereum' *ngIf="ticketPriceAsBigInt"></i>
   </span>
-</button>
+  </button>
 
-<button mat-raised-button color="primary" class="h6"
-        [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
-        (click)="makeDeposit(getDepositValue(4))">
+  <button mat-raised-button color="primary" class="h6"
+          [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
+          (click)="makeDeposit(getDepositValue(4))">
   <span class="button-content">
     {{getDepositPrice(4)}}
-    <i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i>
+    <i class='fab fa-ethereum' *ngIf="ticketPriceAsBigInt"></i>
   </span>
-</button>
+  </button>
 
-<button mat-raised-button color="primary" class="h6"
-        [disabled]="balanceIsNegative(balance$ | async)"
-        (click)="withdrawMoney()">Withdraw money
-</button>
+  <button mat-raised-button color="primary" class="h6"
+          [disabled]="balanceIsNegative(balance$ | async)"
+          (click)="withdrawMoney()">Withdraw money
+  </button>
+</ng-template>

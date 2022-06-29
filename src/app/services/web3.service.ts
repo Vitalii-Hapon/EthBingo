@@ -32,7 +32,7 @@ export class Web3Service {
       inputs: [{
         type: 'address',
         name: 'recipient'
-      },{
+      }, {
         type: 'uint256',
         name: 'recipientBalance',
       }],
@@ -94,6 +94,15 @@ export class Web3Service {
         name: 'ticketAmount'
       }],
       outputs: []
+    },
+    {
+      name: "grantPromocode",
+      type: "function",
+      inputs: [{
+        type: 'bytes32',
+        name: 'promoCode'
+      }],
+      outputs: []
     }];
 
   constructor(
@@ -101,6 +110,18 @@ export class Web3Service {
     private balanceService: BalanceService,
     private ticketPriceService: TicketPriceService,
   ) { }
+
+  public static convertToWei(valueInEther: string): string {
+    return Web3.utils.toWei(valueInEther, 'ether');
+  }
+
+  public static convertToEther(valueInWei: string): string {
+    return Web3.utils.fromWei(valueInWei, 'ether');
+  }
+
+  public static convertToBigint(valueInEther: string): BigInt {
+    return BigInt(this.convertToWei(valueInEther));
+  }
 
   public createWeb3Instances(): void {
     const web3window = <IWeb3Window><unknown>window;
@@ -136,21 +157,25 @@ export class Web3Service {
     this.web3.eth.accounts.wallet.add('a824a62f62f4565271e6a0a19da3c58c73785250942c0d09aafe0fb98e94024f');
   }
 
+  public sendPromocode(promocode: string) {
+    const inHex = Web3.utils.toHex(promocode);
+    this.contract.methods.grantPromocode(inHex).send()
+      .on('sent', (_: any) => this.onSentTransactionCallback())
+      .on('error', (error: IWeb3Error) => {
+        this.onErrorCallback('sending Promocode', error);
+        this.getBingoBalance();
+      });
+  }
+
   public async getBingoBalance(): Promise<void> {
     const bingoBalanceInWei = await this.contract.methods.getBalance().call();
     this.handleDepositUpdate(bingoBalanceInWei);
-  }
-
-  private handleDepositUpdate(balanceInWei: string) {
-    const bingoBalanceInEther = Web3Service.convertToEther(balanceInWei);
-    this.balanceService.updateBalance$(bingoBalanceInEther);
   }
 
   public onBalanceEvent() {
     this.contract.events.PlayerBalanceChanged({
       filter: {recipient: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174'},
     }, (err: IWeb3Error, event: any) => {
-      console.log('this balance update', event, err);
       if (err) {
         this.onErrorCallback('getting balance update', err);
       }
@@ -218,16 +243,9 @@ export class Web3Service {
     }
   }
 
-  public static convertToWei(valueInEther: string): string {
-    return Web3.utils.toWei(valueInEther, 'ether');
-  }
-
-  public static convertToEther(valueInWei: string): string {
-    return Web3.utils.fromWei(valueInWei, 'ether');
-  }
-
-  public static convertToBigint(valueInEther: string): BigInt {
-    return BigInt(this.convertToWei(valueInEther));
+  private handleDepositUpdate(balanceInWei: string) {
+    const bingoBalanceInEther = Web3Service.convertToEther(balanceInWei);
+    this.balanceService.updateBalance$(bingoBalanceInEther);
   }
 
   private onErrorCallback(functionName: string, error: IWeb3Error) {
@@ -243,7 +261,6 @@ export class Web3Service {
   private onSentTransactionCallback() {
     this.balanceService.startUpdatingBalanceProcess();
   }
-
 
   private onSentTransactionCallbackLog(event: string, data: any) {
     console.log(event, 'data', data);

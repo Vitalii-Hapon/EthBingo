@@ -1,14 +1,19 @@
 <mat-toolbar>
   <mat-toolbar-row class="row">
-    <button mat-raised-button color="primary" class="h5" [routerLink]="'main-page'" routerLinkActive #main="routerLinkActive" [disabled]="main.isActive">Main</button>
+    <button mat-raised-button color="primary" class="h5" [routerLink]="'main-page'" routerLinkActive
+            #main="routerLinkActive" [disabled]="main.isActive">Main
+    </button>
     <button mat-button class="h4" [routerLink]="''" style="margin-left: -15px">EtherBingo</button>
     <button mat-mini-fab color="primary" [routerLink]="'sing-out'">
       <mat-icon>account_circle</mat-icon>
     </button>
   </mat-toolbar-row>
   <mat-toolbar-row class="row">
-    <button mat-raised-button color="primary" class="h5" [routerLink]="'wallet'" routerLinkActive #wallet="routerLinkActive" [disabled]="wallet.isActive">Wallet</button>
-    <span>{{currentBingoBalance$ | async}} <i class='fab fa-ethereum' style='font-size:24px' *ngIf="balanceIsUpdated$ | async"></i></span>
+    <button mat-raised-button color="primary" class="h5" [routerLink]="'wallet'" routerLinkActive
+            #wallet="routerLinkActive" [disabled]="wallet.isActive">Wallet
+    </button>
+    <span>{{currentBingoBalance$ | async}} <i class='fab fa-ethereum' style='font-size:24px'
+                                              *ngIf="balanceIsUpdated$ | async"></i></span>
   </mat-toolbar-row>
 </mat-toolbar>
 <div class="content-folder">
@@ -17,8 +22,8 @@
 <ng-container *ngIf="(showPopup$ | async) && (popupViewModel$ | async) as popup">
   <div class="popup-wrapper">
     <div class="popup-content mat-app-background">
-      <p>{{popup.title}}</p>
-      <span>{{popup.content}}</span>
+      <p class="popup-title">{{popup.title}}</p>
+      <p>{{popup.content}}</p>
       <button mat-raised-button color="primary" class="h6" (click)="closePopup()">Close</button>
     </div>
   </div>

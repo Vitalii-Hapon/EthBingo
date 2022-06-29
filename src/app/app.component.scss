@@ -10,22 +10,3 @@
   opacity: 0.4;
 }
 
-.popup-wrapper {
-  display: grid;
-  place-content: center;
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background-color: rgba(48,48,48, 0.4);
-}
-
-.popup-content {
-  width: 275px;
-  height: max-content;
-  border-radius: 1.5rem;
-  display: grid;
-  grid-gap: 1rem;
-  place-content: center;
-  padding: 1.5rem;
-  text-align: center;
-}

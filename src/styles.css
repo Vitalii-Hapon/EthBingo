@@ -1,3 +1,7 @@
+* {
+  font-family: Roboto, "Helvetica Neue", sans-serif
+}
+
 .mat-app-background {
   margin: 0;
   box-sizing: border-box;
@@ -43,3 +47,33 @@ router-outlet + * {
   display: inline-block;
   text-align: center;
 }
+
+
+.popup-wrapper {
+  display: grid;
+  place-content: center;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: rgba(48,48,48, 0.4);
+}
+
+.popup-content {
+  height: max-content;
+  border-radius: 1.5rem;
+  display: grid;
+  grid-gap: 1rem;
+  place-content: center;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.popup-title {
+  margin: 0;
+}
+
+
+.mat-form-field.mat-focused .mat-form-field-label {
+  color: rgba(255, 255, 255, .7) !important;
+}
+
