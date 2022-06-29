@@ -80,7 +80,7 @@ export class RoomComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public startGame(): void {
-    this.web3Service.play(50);
+    this.web3Service.play(1);
     this.currentGameTime = GameTime.Countdown;
     this.startCountDown();
   }

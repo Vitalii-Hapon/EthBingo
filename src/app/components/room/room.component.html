@@ -22,7 +22,6 @@
   </ng-container>
 
   <ng-container *ngIf="isPlayTime || isWonTime">
-    <ng-container *ngIf="!showStartNewGame; else startNewGameContainer">
       <div class="row h5 text-center called-balls-title">Called Balls</div>
       <div class="calls-wrapper">
         <div class="empty-numbers" *ngIf="calledBalls.length === 0; else calledBallsRange"></div>
@@ -36,9 +35,8 @@
           </swiper>
         </ng-template>
       </div>
-    </ng-container>
 
-    <ng-template #startNewGameContainer>
+    <ng-template *ngIf="showStartNewGame">
       <button mat-raised-button color="primary" class="h6 mt1" (click)="startNewGame()">Start new game</button>
     </ng-template>
 

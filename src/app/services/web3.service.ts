@@ -5,6 +5,7 @@ import { Contract } from "web3-eth-contract";
 import { WebsocketProvider } from "web3-core";
 import { BalanceService } from "./balance.service";
 import { TicketPriceService } from "./ticket-price.service";
+import { PopupService, PopupTitle } from "./popup.service";
 
 interface IWeb3Error extends Error {
   reason: string;
@@ -96,6 +97,7 @@ export class Web3Service {
     }];
 
   constructor(
+    private popup: PopupService,
     private balanceService: BalanceService,
     private ticketPriceService: TicketPriceService,
   ) { }
@@ -148,8 +150,9 @@ export class Web3Service {
     this.contract.events.PlayerBalanceChanged({
       filter: {recipient: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174'},
     }, (err: IWeb3Error, event: any) => {
+      console.log('this balance update', event, err);
       if (err) {
-        Web3Service.onErrorCallback('getting balance update', err);
+        this.onErrorCallback('getting balance update', err);
       }
       if (event) {
         this.handleDepositUpdate(event.returnValues.recipientBalance);
@@ -172,7 +175,7 @@ export class Web3Service {
     this.contract.methods.play(tickets).send()
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('error', (error: IWeb3Error) => {
-        Web3Service.onErrorCallback('starting game', error);
+        this.onErrorCallback('starting game', error);
         this.getBingoBalance();
       });
   }
@@ -182,7 +185,7 @@ export class Web3Service {
     this.contract.methods.deposit().send({value: valueInWei, gas: 50000, gasPrice: 50000})
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('error', (error: IWeb3Error) => {
-        Web3Service.onErrorCallback('making the deposit', error);
+        this.onErrorCallback('making the deposit', error);
         this.getBingoBalance();
       });
   }
@@ -191,7 +194,7 @@ export class Web3Service {
     this.contract.methods.withdraw().send()
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('error', (error: IWeb3Error) => {
-        Web3Service.onErrorCallback('making the withdraw', error);
+        this.onErrorCallback('making the withdraw', error);
         this.getBingoBalance();
       });
   }
@@ -227,10 +230,12 @@ export class Web3Service {
     return BigInt(this.convertToWei(valueInEther));
   }
 
-  private static onErrorCallback(functionName: string, error: IWeb3Error) {
+  private onErrorCallback(functionName: string, error: IWeb3Error) {
     if (error.reason) {
+      this.popup.setPopup(PopupTitle.Error, error.reason);
       console.warn(`We\`ve got an error, during ${functionName}.`, `Error Reason: ${error.reason}`);
     } else {
+      this.popup.setPopup(PopupTitle.Error, 'Something went wrong');
       console.warn(`We\`ve got an error, during ${functionName}.`, `Error Message: ${error.message}`);
     }
   }

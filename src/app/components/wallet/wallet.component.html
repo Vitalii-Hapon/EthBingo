@@ -1,31 +1,39 @@
-<p>Ticket Price is: {{ticketPrice}}<i class='fab fa-ethereum'></i></p>
+<p>Ticket Price is: {{ticketPrice}}<i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i></p>
 
 <button mat-raised-button color="primary" class="h6"
         [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
         (click)="makeDeposit(getDepositValue(1))">
-  {{getDepositPrice(1)}}
-  <i class='fab fa-ethereum'></i>
+  <span class="button-content">
+    {{getDepositPrice(1)}}
+    <i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i>
+  </span>
 </button>
 
 <button mat-raised-button color="primary" class="h6"
         [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
         (click)="makeDeposit(getDepositValue(2))">
-  {{getDepositPrice(2)}}
-  <i class='fab fa-ethereum'></i>
+  <span class="button-content">
+    {{getDepositPrice(2)}}
+    <i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i>
+  </span>
 </button>
 
 <button mat-raised-button color="primary" class="h6"
         [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
         (click)="makeDeposit(getDepositValue(3))">
-  {{getDepositPrice(3)}}
-  <i class='fab fa-ethereum'></i>
+  <span class="button-content">
+    {{getDepositPrice(3)}}
+    <i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i>
+  </span>
 </button>
 
 <button mat-raised-button color="primary" class="h6"
         [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
         (click)="makeDeposit(getDepositValue(4))">
-  {{getDepositPrice(4)}}
-  <i class='fab fa-ethereum'></i>
+  <span class="button-content">
+    {{getDepositPrice(4)}}
+    <i class='fab fa-ethereum' *ngIf="!depositIsDisable(balance$ | async, ticketPriceAsBigInt)"></i>
+  </span>
 </button>
 
 <button mat-raised-button color="primary" class="h6"
