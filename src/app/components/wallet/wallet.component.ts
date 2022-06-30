@@ -70,7 +70,8 @@ export class WalletComponent implements OnInit, OnDestroy {
   }
 
   public depositIsDisable(balance: string, ticketPriceAsBigInt: BigInt): boolean {
-    return !(ticketPriceAsBigInt && Number(balance));
+    // console.log(ticketPriceAsBigInt, Number(balance), !ticketPriceAsBigInt, !Number(balance), !(ticketPriceAsBigInt && Number(balance)));
+    return !(ticketPriceAsBigInt && (Number(balance) || Number(balance) === 0));
   }
 
   public usePromocode(): void {

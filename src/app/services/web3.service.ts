@@ -10,6 +10,7 @@ import { PopupService, PopupTitle } from "./popup.service";
 interface IWeb3Error extends Error {
   reason: string;
   receipt: any;
+  code: number
 }
 
 interface IWeb3Window extends Window {
@@ -21,6 +22,11 @@ interface IWeb3Window extends Window {
   providedIn: 'root'
 })
 export class Web3Service {
+  private metamaskWeb3!: Web3;
+  private metamaskProvider: any;
+  private web3window = <IWeb3Window><unknown>window;
+  private account!: string;
+  private privateKey!: string;
 
   private web3!: Web3;
   private contract!: Contract;
@@ -123,38 +129,54 @@ export class Web3Service {
     return BigInt(this.convertToWei(valueInEther));
   }
 
-  public createWeb3Instances(): void {
-    const web3window = <IWeb3Window><unknown>window;
-
-    if (web3window.ethereum) {
-      console.log('this account', web3window.ethereum.currentProvider)
-      console.log('this window vw3', web3window)
-    } else {
-      window.alert('please, install MetaMask extension on your browser and then continue');
+  public async connectMetamask(): Promise<void> {
+    if (!this.web3window.ethereum && !this.web3window.web3) {
+      this.popup.setPopup(PopupTitle.Error, 'Please, install MetaMask extension on your browser and then continue');
+      return;
     }
+    this.setMetamask();
+    await this.initializeAccount();
+    this.initializeWeb3();
+    // if (this.account) {
+    //   await this.getEncryptedPrivateKey();
+    // }
+    // if (this.privateKey) {
+    // }
+  }
 
+  private setMetamask() {
+    if (this.web3window.ethereum) {
+      this.metamaskProvider = this.web3window.ethereum;
+      this.metamaskWeb3 = new Web3(this.metamaskProvider);
+      return;
+    }
+    // this.metamaskProvider = this.web3window.web3;
+    // this.metamaskWeb3 = new Web3(this.metamaskProvider);
+  }
+
+  public initializeWeb3(): void {
     this.provider = new Web3.providers.WebsocketProvider('wss://eth-goerli.alchemyapi.io/v2/wi9aNLc5ianem3nYTGf-G_wBzuM76DPZ');
     this.web3 = new Web3(this.provider);
-    this.contract = new this.web3.eth.Contract(
-      this.jsonInterfaces,
-      '0xF7a5E70D1236C4CCdfBacdF0E13056149A5f98E8', {
-        gasPrice: '40000',
-        gas: 40000,
-        from: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174',
-      });
     this.web3.eth.handleRevert = true;
-    // this.contract.options.gas = 40000;
-    // this.contract.options.gasPrice = '40000';
-    // this.contract.options.from = '0xFF0AED2b68aABC2fEF9c7342AA78c4ee7602A1b4';
 
     this.setAccountDetails();
     this.getBingoBalance();
     this.getTicketPrice();
+    this.onBalanceEvent();
   }
 
   public setAccountDetails(): void {
-    this.web3.eth.defaultAccount = '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174';
-    this.web3.eth.accounts.wallet.add('a824a62f62f4565271e6a0a19da3c58c73785250942c0d09aafe0fb98e94024f');
+    this.contract = new this.web3.eth.Contract(
+      this.jsonInterfaces,
+      '0x9122Cad82131A8B4254E4442d701d69303d92C06', {
+        gasPrice: '40000',
+        gas: 40000,
+        from: this.account,
+      });
+    this.web3.eth.defaultAccount = this.account;
+    // this.web3.eth.accounts.wallet.add('0xabc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc1');
+    // console.log('this wallet', this.web3.eth.accounts.wallet);
+    // this.web3.eth.accounts.wallet.decrypt(this/);
   }
 
   public sendPromocode(promocode: string) {
@@ -162,7 +184,7 @@ export class Web3Service {
     this.contract.methods.grantPromocode(inHex).send()
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('error', (error: IWeb3Error) => {
-        this.onErrorCallback('sending Promocode', error);
+        this.onErrorCallbackForTransaction('sending Promocode', error);
         this.getBingoBalance();
       });
   }
@@ -174,10 +196,10 @@ export class Web3Service {
 
   public onBalanceEvent() {
     this.contract.events.PlayerBalanceChanged({
-      filter: {recipient: '0xaC043baaE3055E8397Fd0B6B820262EAAfc6B174'},
+      filter: {recipient: this.account},
     }, (err: IWeb3Error, event: any) => {
       if (err) {
-        this.onErrorCallback('getting balance update', err);
+        this.onErrorCallbackForTransaction('getting balance update', err);
       }
       if (event) {
         this.handleDepositUpdate(event.returnValues.recipientBalance);
@@ -200,47 +222,84 @@ export class Web3Service {
     this.contract.methods.play(tickets).send()
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('error', (error: IWeb3Error) => {
-        this.onErrorCallback('starting game', error);
+        this.onErrorCallbackForTransaction('starting game', error);
         this.getBingoBalance();
       });
   }
 
   public async makeDeposit(valueInEther: string): Promise<void> {
     const valueInWei = Web3Service.convertToWei(valueInEther);
-    this.contract.methods.deposit().send({value: valueInWei, gas: 50000, gasPrice: 50000})
-      .on('sent', (_: any) => this.onSentTransactionCallback())
-      .on('error', (error: IWeb3Error) => {
-        this.onErrorCallback('making the deposit', error);
-        this.getBingoBalance();
-      });
+    // console.log('this hex', Web3.utils.toHex('50000'))
+    // this.contract.methods.deposit().send({value: valueInWei, gas: 50000, gasPrice: 50000})
+    //   .on('sent', (_: any) => this.onSentTransactionCallback())
+    //   .on('error', (error: IWeb3Error) => {
+    //     this.onErrorCallbackForTransaction('making the deposit', error);
+    //     this.getBingoBalance();
+    //   });
+
+
+    const transactionParameter = {
+      from: this.account,
+      to: "0x9122Cad82131A8B4254E4442d701d69303d92C06",
+      value: Web3.utils.toHex(valueInWei),
+      gasPrice: Web3.utils.toHex(50000),
+      // gas: Web3.utils.toHex(gasEstimate),
+      data: this.contract.methods.deposit().encodeABI(),
+    };
+    this.metamaskProvider.request({method: 'eth_sendTransaction', params: [transactionParameter]})
+      .then((transHash: any) => console.log('data', data))
+      .catch((err: IWeb3Error) => console.log(err.code, err.messsage))
+      // .on('sent', (data: any) => this.onSentTransactionCallbackLog('trans', data))
+      // .on('confirmation', (data: any) => this.onSentTransactionCallbackLog('trans', data))
+      // .on('error', (error: IWeb3Error) => {
+      //   this.onErrorCallbackForTransaction('making the deposit', error);
+      //   this.getBingoBalance();
+      // });
   }
 
   public async withdraw(): Promise<void> {
     this.contract.methods.withdraw().send()
       .on('sent', (_: any) => this.onSentTransactionCallback())
       .on('error', (error: IWeb3Error) => {
-        this.onErrorCallback('making the withdraw', error);
+        this.onErrorCallbackForTransaction('making the withdraw', error);
         this.getBingoBalance();
       });
   }
 
-  public getAccount() {
-    // @ts-ignore
-    if (window.ethereum) {
-      // @ts-ignore
-      // const metamaskProvide = window.ethereum;
-      // const metamaskWeb3 = new Web3(metamaskProvide);
-      // const account = metamaskWeb3.defaultAccount;
-      // const accounts = metamaskWeb3.eth.accounts;
-      // console.log('this accaount', account);
-      // console.log('this accaounts', accounts);
-      // metamaskWeb3.eth.getAccounts().then(acc => console.log('this acc', acc));
-      // metamaskWeb3.eth.requestAccounts().then(res =>console.log('this request', res));
-      this.web3.eth.requestAccounts().then(res => console.log('this request', res))
+  public async initializeAccount() {
+    this.account = await this.metamaskProvider.request({method: 'eth_requestAccounts'})
+      .then((array: string[], err: any) => array[0])
+      .catch((error: IWeb3Error) => {
+        if (error.code === 4001) {
+          this.popup.setPopup(PopupTitle.Error, 'User denied the authentication request');
+          console.warn(`We\`ve got an error, during the authentication request`, `Error Message: ${error.message}`);
+        } else {
+          this.popup.setPopup(PopupTitle.Error, 'Something went wrong');
+          console.warn(`We\`ve got an error, during the authentication request`, `Error Message: ${error.message}`);
+        }
+      });
+    console.log('acc', this.account);
+  }
 
-      // @ts-ignore
-      window.ethereum.request({method: eth_requestAccounts}).then(res => console.log('this acc', res));
-    }
+  private async getEncryptedPrivateKey(): Promise<void> {
+    console.log('this key', this.privateKey);
+    this.privateKey = await this.metamaskProvider.request({
+      method: 'eth_getEncryptionPublicKey',
+      params: [this.account],
+    }).catch((error: IWeb3Error) => {
+        if (error.code === 4001) {
+          this.popup.setPopup(PopupTitle.Error, 'User denied access to EncryptionPublicKey');
+          console.warn(`We\`ve got an error, during getting EncryptionPublicKey`, `Error Message: ${error.message}`);
+        } else {
+          this.popup.setPopup(PopupTitle.Error, 'Something went wrong');
+          console.warn(`We\`ve got an error, during getting EncryptionPublicKey`, `Error Message: ${error.message}`);
+        }
+      });
+    // console.log('this key', const privKey = Buffer.from(this.privateKey));
+    // this.metamaskProvider.request({
+    //   method: 'eth_decrypt',
+    //   params: [this.privateKey, this.account],
+    // }).then((res: any) => console.log('this res', res));
   }
 
   private handleDepositUpdate(balanceInWei: string) {
@@ -248,7 +307,7 @@ export class Web3Service {
     this.balanceService.updateBalance$(bingoBalanceInEther);
   }
 
-  private onErrorCallback(functionName: string, error: IWeb3Error) {
+  private onErrorCallbackForTransaction(functionName: string, error: IWeb3Error) {
     if (error.reason) {
       this.popup.setPopup(PopupTitle.Error, error.reason);
       console.warn(`We\`ve got an error, during ${functionName}.`, `Error Reason: ${error.reason}`);

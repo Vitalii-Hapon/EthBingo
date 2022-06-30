@@ -27,8 +27,7 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.web3Service.createWeb3Instances();
-    this.web3Service.onBalanceEvent();
+    await this.web3Service.connectMetamask();
   }
 
   public closePopup() {

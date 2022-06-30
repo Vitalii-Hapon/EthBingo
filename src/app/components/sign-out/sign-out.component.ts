@@ -14,6 +14,6 @@ export class SignOutComponent implements OnInit {
   }
 
   getAccount() {
-    this.web3Service.getAccount();
+    // this.web3Service.getAccount();
   }
 }

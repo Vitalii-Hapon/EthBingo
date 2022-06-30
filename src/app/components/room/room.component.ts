@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { GameTime } from "../../models/models";
 import { interval, Observable, Subject } from "rxjs";
 import { map, takeUntil } from "rxjs/operators";
@@ -18,7 +18,7 @@ const CallSequenceLength = 75;
   styleUrls: ['./room.component.scss']
 })
 
-export class RoomComponent implements OnInit, OnDestroy, AfterViewInit {
+export class RoomComponent implements OnInit, OnDestroy {
   @ViewChild('swiperContainer', { static: true }) swiperContainer!: ElementRef;
   public timeToStart!: number;
   public calledBalls: number[] = [];
@@ -153,6 +153,9 @@ export class RoomComponent implements OnInit, OnDestroy, AfterViewInit {
         this.timeToStart = this.timeToStart - 1;
         if (this.timeToStart === 0) {
           this.stopCountDown()
+          if (this.el.nativeElement?.offsetHeight) {
+            this.boardsSwiperConfig.slidesPerView = this.el.nativeElement.offsetHeight / 270;
+          }
           this.currentGameTime = GameTime.PLay;
           this.startPlayTime();
         }
@@ -203,12 +206,6 @@ export class RoomComponent implements OnInit, OnDestroy, AfterViewInit {
   private stopPlayTime(): void {
     this.stopPlayTime$.next();
     this.stopPlayTime$.complete();
-  }
-
-  ngAfterViewInit(): void {
-    if (this.el.nativeElement?.offsetHeight) {
-      this.boardsSwiperConfig.slidesPerView = this.el.nativeElement.offsetHeight / 270;
-    }
   }
 
   public closeWin(): void {
