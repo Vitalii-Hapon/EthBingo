@@ -1,24 +1,36 @@
 <ng-container #swiperContainer>
-  <ng-container *ngIf="isBuyTime">
+  <div class="before-game-container" *ngIf="isBuyTime">
     <!--  <p class="row h4 text-center">Current ticket price: {{ticketPrice}} <i class='fab fa-ethereum' style='font-size:24px'></i></p>-->
     <p *ngIf="!((balanceIsUpdated$ | async) && (ticketIsUpdated$ | async)); else balanceUpdated" class="h4"> Wait, until
-      balance
-      would be updated</p>
+      balance would be updated</p>
 
     <ng-template #balanceUpdated>
-      <button mat-raised-button color="primary" class="h6" (click)="startGame()"
-              *ngIf="balanceValueIsEnough(balance$ | async, ticketPrice$ | async); else GoToWallet">Play game
-      </button>
+      <ng-container *ngIf="balanceValueIsEnough(balance$ | async, ticketPrice$ | async); else GoToWallet">
+        <p>You need to start: {{valueToStart(ticketPrice$ | async)}} <i class='fab fa-ethereum'></i></p>
+        <button mat-raised-button color="primary" class="h6" (click)="startGame()"
+        >Play game
+        </button>
+      </ng-container>
       <ng-template #GoToWallet>
-        <p>Not enough money, please, make a deposit</p>
+        <p>Not enough money. You need {{valueToStart(ticketPrice$ | async)}} <i class='fab fa-ethereum'></i></p>
+        <p>Please, make a deposit</p>
         <button mat-raised-button color="primary" class="h5" [routerLink]="'/wallet'">Go to Wallet</button>
       </ng-template>
     </ng-template>
-  </ng-container>
+  </div>
 
   <ng-container *ngIf="isCountDownTime">
-    <span class="row h4 text-center">Time to start: {{timeToStart}}</span>
-    <!--  <p class="row h4">Yo have: {{boughTickets}} bought tickets</p>-->
+    <div class="before-game-container rejected">
+      <ng-container *ngIf="gameRejected; else waiterContainer">
+        <span class="row h4 text-center">You`ve rejected transaction or there were some error</span>
+        <button mat-raised-button color="primary" class="h6" (click)="restartGame()">Restart Game</button>
+        <button mat-raised-button color="primary" class="h6" [routerLink]="''" (click)="quit()">Back to main page
+        </button>
+      </ng-container>
+      <ng-template #waiterContainer><span class="row h4 text-center">Approve transaction in Metamask</span>
+      </ng-template>
+      <!--    <span class="row h4 text-center">Time to start: {{timeToStart}}</span>-->
+    </div>
   </ng-container>
 
   <ng-container *ngIf="isPlayTime || isWonTime">

@@ -43,6 +43,12 @@ router-outlet + * {
   text-align: center;
 }
 
+router-outlet + app-wallet {
+  /*display: flex;*/
+  /*flex-direction: column;*/
+  /*justify-content: space-between;*/
+}
+
 .text-center {
   display: inline-block;
   text-align: center;
@@ -78,3 +84,11 @@ router-outlet + * {
   color: rgba(255, 255, 255, .7) !important;
 }
 
+.balance-loader {
+  height: 3rem;
+}
+
+.deposit-button {
+  background-color: rgba(255,255,255,.3) !important;
+  padding: 0.25rem !important;
+}

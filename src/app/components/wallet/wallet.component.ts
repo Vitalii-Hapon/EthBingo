@@ -5,12 +5,15 @@ import { Observable, Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import { BalanceService } from "../../services/balance.service";
 
+export const DepositVariables = [1, 2, 3, 4, 5, 10]; // don`t forget check grid template
+
 @Component({
   selector: 'app-wallet',
   templateUrl: './wallet.component.html',
   styleUrls: ['./wallet.component.css']
 })
 export class WalletComponent implements OnInit, OnDestroy {
+  public depositButtons: number[] = DepositVariables;
   public ticketPrice!: string;
   public ticketPriceAsBigInt!: BigInt;
   public ticketPriceIsGot: boolean = false;
@@ -51,18 +54,21 @@ export class WalletComponent implements OnInit, OnDestroy {
     this.web3Service.makeDeposit(value);
   }
 
-  public getDepositPrice(multiplier: number): string {
-    const depositValue = this.ticketPriceIsGot ? this.getDepositValue(multiplier) : this.ticketPrice;
-    return `Make deposit - ${depositValue}`;
+  public getDepositPrice(ticketPriceInEther: string, multiplier: number): string {
+    const depositValue = this.ticketPriceIsGot ? this.getDepositValue(ticketPriceInEther, multiplier) : this.ticketPrice;
+    return `Deposit ${depositValue}`;
   }
 
-  public getDepositValue(multiplier: number): string {
-    const depositValueInBigInt: string = (<bigint>this.ticketPriceAsBigInt * BigInt(multiplier)).toString();
-    return Web3Service.convertToEther(depositValueInBigInt);
+  public getDepositValue(ticketPriceInEther: string, multiplier: number): string {
+    return Web3Service.getMultipleEtherValue(ticketPriceInEther, multiplier);
   }
 
   public withdrawMoney(): void {
     this.web3Service.withdraw();
+  }
+
+  public balance(): void {
+    this.web3Service.getBingoBalance();
   }
 
   public balanceIsNegative(balance: string): boolean {
@@ -70,7 +76,6 @@ export class WalletComponent implements OnInit, OnDestroy {
   }
 
   public depositIsDisable(balance: string, ticketPriceAsBigInt: BigInt): boolean {
-    // console.log(ticketPriceAsBigInt, Number(balance), !ticketPriceAsBigInt, !Number(balance), !(ticketPriceAsBigInt && Number(balance)));
     return !(ticketPriceAsBigInt && (Number(balance) || Number(balance) === 0));
   }
 

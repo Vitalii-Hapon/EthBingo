@@ -9,6 +9,8 @@ const BALANCE_UPDATING_PHRASE = 'balance is updating...';
 export class BalanceService {
   private balance: BehaviorSubject<string> = new BehaviorSubject<string>(BALANCE_UPDATING_PHRASE);
   private balanceIsUpdated: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private balanceFrozen = false;
+  private balanceCash: string | undefined;
 
   constructor() { }
 
@@ -20,9 +22,25 @@ export class BalanceService {
     return this.balanceIsUpdated.asObservable();
   }
 
-  public updateBalance$(newBalance: string) {
-    this.balance.next(newBalance);
-    this.balanceIsUpdated.next(true);
+  public updateBalance(newBalance: string) {
+    if (this.balanceFrozen) {
+      this.balanceCash = newBalance;
+    } else {
+      this.balance.next(newBalance);
+      this.balanceIsUpdated.next(true);
+    }
+  }
+
+  public freezeBalanceForGame(): void {
+    this.balanceCash = undefined;
+    this.balanceFrozen = true;
+  }
+
+  public updateBalanceAfterFreeze(): void {
+    this.balanceFrozen = false;
+    if (this.balanceCash) {
+      this.updateBalance(this.balanceCash);
+    }
   }
 
   public startUpdatingBalanceProcess(): void {

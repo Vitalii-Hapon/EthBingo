@@ -1,54 +1,66 @@
-<mat-toolbar>
-  <mat-toolbar-row class="row">
-    <button mat-button class="h4" [routerLink]="''" style="margin-left: -15px">EtherBingo</button>
+<ng-template #loader>
 
-    <span>{{currentBingoBalance$ | async}} <i class='fab fa-ethereum' style='font-size:24px'
-                                              *ngIf="balanceIsUpdated$ | async"></i></span>
-    <!--    <button mat-mini-fab color="primary" [routerLink]="'sing-out'">-->
-    <!--      <mat-icon>account_circle</mat-icon>-->
-    <!--    </button>-->
-  </mat-toolbar-row>
-  <mat-toolbar-row class="row">
-    <button mat-raised-button color="primary" class="h5" [routerLink]="'main-page'" routerLinkActive
-            #main="routerLinkActive" [disabled]="main.isActive">Main
-    </button>
-    <button mat-raised-button color="primary" class="h5" [routerLink]="'wallet'" routerLinkActive
-            #wallet="routerLinkActive" [disabled]="wallet.isActive">Wallet
-    </button>
-
-  </mat-toolbar-row>
-</mat-toolbar>
-<div class="content-folder">
-  <router-outlet *ngIf="isConnected; else notConnected"></router-outlet>
-</div>
-<ng-template #notConnected>
-  <div class="popup-wrapper">
-    <div class="popup-content mat-app-background" [ngSwitch]="web3Status">
-      <ng-container *ngSwitchCase="web3StatusType.Disconnected">
-        <p>You`ve been disconnected from metamask. Please connect to metamask</p>
-        <button mat-raised-button color="primary" class="h6" (click)="signIn()">Send request</button>
-      </ng-container>
-      <p *ngSwitchCase="web3StatusType.MetamaskIsNotDefined">Metamask was not found. Please install Metamask
-        extension</p>
-      <ng-container *ngSwitchCase="web3StatusType.MetamaskDefined">
-        <p>Please connect to Metamask</p>
-        <!--        <button mat-raised-button color="primary" class="h6" (click)="signIn()">Send request</button>-->
-      </ng-container>
-      <ng-container *ngSwitchCase="web3StatusType.AccountRejected">
-        <p>You`ve rejected metamask connection. Please connect to
-          metamask</p>
-        <button mat-raised-button color="primary" class="h6" (click)="signIn()">Send request</button>
-      </ng-container>
-    </div>
+  <div class="main-loader" (click)="initClick()">
+    <img alt="loader" src="assets/giphy.gif">
   </div>
+
+    <div class="popup-wrapper" *ngIf="initialized && !isConnected">
+      <div class="popup-content mat-app-background" [ngSwitch]="web3Status">
+        <ng-container *ngSwitchCase="web3StatusType.Disconnected">
+          <p>You`ve been disconnected from metamask. Please connect to metamask</p>
+          <button mat-raised-button color="primary" class="h6" (click)="signIn()">Send request</button>
+        </ng-container>
+        <p *ngSwitchCase="web3StatusType.MetamaskIsNotDefined">Metamask was not found. Please install Metamask
+          extension</p>
+        <ng-container *ngSwitchCase="web3StatusType.MetamaskDefined">
+          <p>Please connect to Metamask</p>
+          <!--        <button mat-raised-button color="primary" class="h6" (click)="signIn()">Send request</button>-->
+        </ng-container>
+        <ng-container *ngSwitchCase="web3StatusType.AccountRejected">
+          <p>You`ve rejected metamask connection. Please connect to
+            metamask</p>
+          <button mat-raised-button color="primary" class="h6" (click)="signIn()">Send request</button>
+        </ng-container>
+      </div>
+    </div>
 </ng-template>
 
-<ng-container *ngIf="(showPopup$ | async) && (popupViewModel$ | async) as popup">
-  <div class="popup-wrapper">
-    <div class="popup-content mat-app-background">
-      <p class="popup-title">{{popup.title}}</p>
-      <p>{{popup.content}}</p>
-      <button mat-raised-button color="primary" class="h6" (click)="closePopup()">Close</button>
-    </div>
+<ng-container *ngIf="initialized && isConnected; else loader">
+  <mat-toolbar>
+    <mat-toolbar-row class="row">
+      <button mat-button class="h4" [routerLink]="''" style="margin-left: -15px">EtherBingo</button>
+
+      <span *ngIf="balanceIsUpdated$ | async; else balanceLoader">{{currentBingoBalance$ | async}} <i
+        class='fab fa-ethereum' style='font-size:24px'></i></span>
+
+      <ng-template #balanceLoader><img alt="balanceLoader" src="assets/Ethereum_logo_revolving.gif"
+                                       class="balance-loader"></ng-template>
+      <!--    <button mat-mini-fab color="primary" [routerLink]="'sing-out'">-->
+      <!--      <mat-icon>account_circle</mat-icon>-->
+      <!--    </button>-->
+    </mat-toolbar-row>
+    <mat-toolbar-row class="row">
+      <button mat-raised-button color="primary" class="h5" [routerLink]="'main-page'" routerLinkActive
+              #main="routerLinkActive" [disabled]="main.isActive">Main
+      </button>
+      <button mat-raised-button color="primary" class="h5" [routerLink]="'wallet'" routerLinkActive
+              #wallet="routerLinkActive" [disabled]="wallet.isActive">Wallet
+      </button>
+
+    </mat-toolbar-row>
+  </mat-toolbar>
+
+  <div class="content-folder">
+    <router-outlet></router-outlet>
   </div>
+
+  <ng-container *ngIf="(showPopup$ | async) && (popupViewModel$ | async) as popup">
+    <div class="popup-wrapper">
+      <div class="popup-content mat-app-background">
+        <p class="popup-title">{{popup.title}}</p>
+        <p>{{popup.content}}</p>
+        <button mat-raised-button color="primary" class="h6" (click)="closePopup()">Close</button>
+      </div>
+    </div>
+  </ng-container>
 </ng-container>

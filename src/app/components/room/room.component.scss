@@ -49,3 +49,13 @@
 .mt1 {
   margin-top: 1rem;
 }
+
+.before-game-container {
+  max-width: 80vw;
+}
+
+.rejected {
+  display: grid;
+  place-content: center;
+  grid-gap: 1rem;
+}

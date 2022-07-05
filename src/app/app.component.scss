@@ -1,12 +1,17 @@
 .content-folder {
-  background-image: url("~src/assets/What-is-Ethereum.webp");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: calc(100vh - 120px);
+  background: linear-gradient(to right bottom, rgb(14, 10, 203), rgb(23, 22, 106));
+  height: calc(100vh - 112px);
 }
 
 .disabled {
   opacity: 0.4;
 }
 
+.main-loader {
+  width: 100%;
+  height: 100%;
+  img {
+    width: 100%;
+    height: 100%;
+  }
+}

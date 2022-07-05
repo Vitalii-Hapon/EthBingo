@@ -1,16 +1,18 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { GameTime } from "../../models/models";
-import { interval, Observable, Subject } from "rxjs";
-import { map, takeUntil } from "rxjs/operators";
+import { interval, Observable, Subject, Subscription } from "rxjs";
+import { filter, first, map, takeUntil } from "rxjs/operators";
 import { Web3Service } from "../../services/web3.service";
 import { BalanceService } from "../../services/balance.service";
 import { TicketPriceService } from "../../services/ticket-price.service";
 import { SwiperOptions } from "swiper";
+import { PlayService } from "../../services/play.service";
 
 const LimitForCountDown = 3;
 const BoardsLength = 5;
 const BoardSize = 25;
 const CallSequenceLength = 75;
+const TicketsToStart = 5;
 
 @Component({
   selector: 'app-room',
@@ -19,7 +21,7 @@ const CallSequenceLength = 75;
 })
 
 export class RoomComponent implements OnInit, OnDestroy {
-  @ViewChild('swiperContainer', { static: true }) swiperContainer!: ElementRef;
+  @ViewChild('swiperContainer', {static: true}) swiperContainer!: ElementRef;
   public timeToStart!: number;
   public calledBalls: number[] = [];
   public boards!: number[][][];
@@ -37,19 +39,22 @@ export class RoomComponent implements OnInit, OnDestroy {
     spaceBetween: 25,
     direction: "vertical",
   };
+  public showStartNewGame!: boolean;
+  public gameRejected!: boolean;
   private callSequence!: number[];
   // public boughTickets = 1;
   private currentGameTime!: GameTime;
   private stopCountDown$!: Subject<any>;
   private stopPlayTime$!: Subject<any>;
-
-  public showStartNewGame!: boolean;
+  private playSubscription!: Subscription;
+  private rejectGameSubscription!: Subscription;
 
   constructor(
     private web3Service: Web3Service,
     private balanceService: BalanceService,
     private ticketPriceService: TicketPriceService,
     private el: ElementRef,
+    private playService: PlayService,
   ) {
   }
 
@@ -69,10 +74,27 @@ export class RoomComponent implements OnInit, OnDestroy {
     return this.currentGameTime === GameTime.BuyTime
   }
 
-  public balanceValueIsEnough(balanceInEther: string = '0,00108', ticketPriceInEther: string = '0,00108'): boolean {
+  public get winnerExist(): boolean {
+    let winner = false;
+    for (const board of this.boards) {
+      for (const row of board) {
+        if (row.every(ball => this.calledBalls.includes(ball))) {
+          winner = true;
+          break;
+        }
+      }
+    }
+    return winner;
+  }
+
+  public balanceValueIsEnough(balanceInEther: string, ticketPriceInEther: string): boolean {
     const balanceAsBigint = Web3Service.convertToBigint(balanceInEther);
-    const ticketPriceAsBigint = Web3Service.convertToBigint(ticketPriceInEther);
-    return balanceAsBigint >= ticketPriceAsBigint;
+    const valueToStartAsBigint = Web3Service.convertToBigint(Web3Service.getMultipleEtherValue(ticketPriceInEther, TicketsToStart));
+    return balanceAsBigint >= valueToStartAsBigint;
+  }
+
+  public valueToStart(ticketPriceInEther: string): string {
+    return Web3Service.getMultipleEtherValue(ticketPriceInEther, TicketsToStart);
   }
 
   public ngOnInit(): void {
@@ -80,9 +102,43 @@ export class RoomComponent implements OnInit, OnDestroy {
   }
 
   public startGame(): void {
-    this.web3Service.play(1);
+    this.gameRejected = false;
+    this.web3Service.play(5);
     this.currentGameTime = GameTime.Countdown;
-    this.startCountDown();
+    this.playSubscription = this.playService.gameCanBeStarted$
+      .pipe(
+        filter(canStarted => canStarted),
+        first())
+      .subscribe(canStarted => {
+        if (canStarted) {
+          if (this.el.nativeElement?.offsetHeight) {
+            this.boardsSwiperConfig.slidesPerView = this.el.nativeElement.offsetHeight / 270;
+          }
+          this.startPlayTime();
+          this.rejectGameSubscription?.unsubscribe();
+        }
+      })
+
+    this.rejectGameSubscription = this.playService.gameRejected$
+      .pipe(
+        filter(rejected => rejected),
+        first())
+      .subscribe(gameRejected => {
+        this.gameRejected = gameRejected;
+        this.playSubscription?.unsubscribe();
+      })
+
+    // this.startCountDown();
+  }
+
+  public restartGame(): void {
+    this.playService.resetGameReject();
+    this.startGame();
+  }
+
+  public quit() {
+    this.playService.resetGameReject()
+    this.finishGame();
   }
 
   public ngOnDestroy(): void {
@@ -100,6 +156,16 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   public trackByNumber(number: number): number {
     return number;
+  }
+
+  public startPlayTime(): void {
+    this.currentGameTime = GameTime.PLay;
+    this.startCallingBalls();
+  }
+
+  public closeWin(): void {
+    this.currentGameTime = GameTime.PLay
+    this.showStartNewGame = true;
   }
 
   private initialize(): void {
@@ -156,14 +222,9 @@ export class RoomComponent implements OnInit, OnDestroy {
           if (this.el.nativeElement?.offsetHeight) {
             this.boardsSwiperConfig.slidesPerView = this.el.nativeElement.offsetHeight / 270;
           }
-          this.currentGameTime = GameTime.PLay;
           this.startPlayTime();
         }
       });
-  }
-
-  private startPlayTime(): void {
-    this.startCallingBalls();
   }
 
   private startCallingBalls(): void {
@@ -171,6 +232,7 @@ export class RoomComponent implements OnInit, OnDestroy {
       takeUntil(this.stopPlayTime$),
       map(i => {
         if (i === this.callSequence.length || this.winnerExist) {
+          this.balanceService.updateBalanceAfterFreeze();
           this.currentGameTime = GameTime.Won;
           this.stopPlayTime();
         }
@@ -179,20 +241,10 @@ export class RoomComponent implements OnInit, OnDestroy {
     ).subscribe();
   }
 
-  public get winnerExist(): boolean {
-    let winner = false;
-    for (const board of this.boards) {
-      for (const row of board) {
-        if (row.every(ball => this.calledBalls.includes(ball))) {
-          winner = true;
-          break;
-        }
-      }
-    }
-    return winner;
-  }
-
   private finishGame(): void {
+    this.playSubscription?.unsubscribe();
+    this.rejectGameSubscription?.unsubscribe();
+    this.playService.gameFinished();
     this.calledBalls = [];
     this.stopCountDown();
     this.stopPlayTime();
@@ -206,10 +258,5 @@ export class RoomComponent implements OnInit, OnDestroy {
   private stopPlayTime(): void {
     this.stopPlayTime$.next();
     this.stopPlayTime$.complete();
-  }
-
-  public closeWin(): void {
-    this.currentGameTime = GameTime.PLay
-    this.showStartNewGame = true;
   }
 }
