@@ -8,6 +8,7 @@ import { TicketPriceService } from "./ticket-price.service";
 import { PopupService, PopupTitle } from "./popup.service";
 import { BehaviorSubject, Observable } from "rxjs";
 import { PlayService } from "./play.service";
+import { distinctUntilChanged } from "rxjs/operators";
 
 interface IWeb3Error extends Error {
   reason: string;
@@ -190,7 +191,10 @@ export class Web3Service {
     }
     this.setMetamaskProvider();
     this.setConnectionHandler();
-    this.web3Status$.subscribe(status => {
+    this.web3Status$
+      .pipe(distinctUntilChanged())
+      .subscribe(status => {
+      console.log('status', status)
       switch (status) {
         case Web3Status.MetamaskDefined: {
           this.initializeAccount();
@@ -239,6 +243,7 @@ export class Web3Service {
 
   public async getBingoBalance(): Promise<void> {
     const bingoBalanceInWei = await this.contract.methods.getBalance().call();
+    console.log('this balance', bingoBalanceInWei);
     this.handleBalanceUpdate(bingoBalanceInWei)
   }
 
@@ -332,8 +337,8 @@ export class Web3Service {
   public async initializeAccount() {
     await this.metamaskProvider.request({method: 'eth_requestAccounts'})
       .then((array: string[]) => {
+        this.account = array[0];
         this.web3Status.next(Web3Status.Connected);
-        return this.account = array[0];
       })
       .catch((error: IWeb3Error) => {
         if (error.code === 4001) {
@@ -366,6 +371,7 @@ export class Web3Service {
   }
 
   private getAppData(): void {
+    console.log('get data');
     this.getTicketPrice();
     this.getBingoBalance();
     this.onBalanceEvent();

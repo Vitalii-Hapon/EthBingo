@@ -10,7 +10,7 @@ export const DepositVariables = [1, 2, 3, 4, 5, 10]; // don`t forget check grid 
 @Component({
   selector: 'app-wallet',
   templateUrl: './wallet.component.html',
-  styleUrls: ['./wallet.component.css']
+  styleUrls: ['./wallet.component.scss']
 })
 export class WalletComponent implements OnInit, OnDestroy {
   public depositButtons: number[] = DepositVariables;

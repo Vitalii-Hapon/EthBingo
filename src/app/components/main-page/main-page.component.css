@@ -1,0 +1,12 @@
+.game-loader {
+  height: 6rem;
+  width: 4rem;
+}
+
+:host {
+  /*background-image: url("~src/assets/giphy-second.gif");*/
+  background-image: url("~src/assets/giphy-blue.gif");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}

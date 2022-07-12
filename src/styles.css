@@ -41,12 +41,7 @@ router-outlet + * {
   background-color: rgba(0, 0, 0, 0.35);
   background-size: 50vh;
   text-align: center;
-}
-
-router-outlet + app-wallet {
-  /*display: flex;*/
-  /*flex-direction: column;*/
-  /*justify-content: space-between;*/
+  color: white;
 }
 
 .text-center {
@@ -85,10 +80,21 @@ router-outlet + app-wallet {
 }
 
 .balance-loader {
+  display: flex;
+  align-items: center;
+  place-content: center;
+}
+
+.balance-loader-icon {
   height: 3rem;
 }
 
 .deposit-button {
-  background-color: rgba(255,255,255,.3) !important;
+  background-color: rgba(255,255,255,0) !important;
   padding: 0.25rem !important;
+  box-shadow: none;
+}
+
+.mat-toolbar {
+  background: linear-gradient(to right bottom, rgb(5, 4, 65), rgb(23, 22, 106)) !important;
 }

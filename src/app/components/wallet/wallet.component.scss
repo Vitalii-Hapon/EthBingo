@@ -1,0 +1,63 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0 2rem 2rem;
+  box-sizing: border-box;
+  color: white;
+}
+
+.button-content {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.fa-ethereum {
+  margin-left: 0.25rem;
+}
+
+.main-buttons-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  grid-column-gap: 1rem;
+  grid-row-gap: 1rem;
+}
+
+.footer {
+  display: grid;
+  grid-gap: 1rem;
+}
+
+.deposit-coin {
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 4rem;
+  height: 4rem;
+}
+.deposit-button:nth-child(1), .deposit-button:nth-child(2) {
+  .deposit-coin {
+    background-image: url("~src/assets/ether_coin_loader.gif");
+  }
+}
+
+//.deposit-button:nth-child(3) {
+//  .deposit-coin {
+//    background-image: url("~src/assets/867.gif");
+//  }
+//}
+
+.deposit-button:nth-child(3),.deposit-button:nth-child(4) {
+  .deposit-coin {
+    background-image: url("~src/assets/ether_coin_loader_gray.gif");
+  }
+}
+
+.deposit-button:nth-child(5), .deposit-button:nth-child(6) {
+  .deposit-coin {
+    background-image: url("~src/assets/ether_coin_loader_gold.gif");
+  }
+}
+

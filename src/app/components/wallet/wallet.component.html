@@ -22,7 +22,8 @@
             [disabled]="depositIsDisable(balance$ | async, ticketPriceAsBigInt)"
             (click)="makeDeposit(getDepositValue(ticketPrice, button))">
   <span class="button-content">
-    <img alt="loader" src="assets/ether_coin_loader.gif">
+    <div class="deposit-coin"></div>
+<!--    <img alt="loader" src="assets/ether_coin_loader.gif">-->
     <span *ngIf="ticketPriceAsBigInt">{{getDepositPrice(ticketPrice, button)}}
       <i class='fab fa-ethereum'></i>
     </span>
@@ -41,5 +42,10 @@
             [disabled]="balanceIsNegative(balance$ | async)"
             (click)="withdrawMoney()">Withdraw money
     </button>
+
+<!--    <button mat-raised-button color="primary" class="h6"-->
+<!--            [disabled]="balanceIsNegative(balance$ | async)"-->
+<!--            (click)="balance()">Withdraw money-->
+<!--    </button>-->
   </div>
 </ng-template>
