@@ -27,7 +27,10 @@
         <button mat-raised-button color="primary" class="h6" [routerLink]="''" (click)="quit()">Back to main page
         </button>
       </ng-container>
-      <ng-template #waiterContainer><span class="row h4 text-center">Approve transaction in Metamask</span>
+      <ng-template #waiterContainer>
+        <span class="row h4 text-center" *ngIf="(gameIsGenerated$ | async); else approveTransaction">Game will start shortly</span>
+        <ng-template #approveTransaction><span class="row h4 text-center">Approve transaction in Metamask</span>
+        </ng-template>
       </ng-template>
       <!--    <span class="row h4 text-center">Time to start: {{timeToStart}}</span>-->
     </div>
@@ -73,14 +76,23 @@
     </swiper>
   </ng-container>
 
-  <ng-container *ngIf="isWonTime">
-    <div class="popup-wrapper">
-      <div class="popup-content mat-app-background">
-        <p class="row h4 mat-primary text-center popup-title">Congratulate! You won</p>
+  <!--  <ng-container *ngIf="isWonTime">-->
+
+  <div class="popup-wrapper">
+    <div class="popup-content mat-app-background">
+      <div class="congratulation-icon">
+        <img src="assets/congrat.png" alt="congratulation icon">
+      </div>
+      <ng-container *ngIf="winningAmountUpdated$ | async; else waitWinningAmount">
+        <p class="row h4 mat-primary text-center popup-title">Congratulate! You won {{winningAmount}}</p>
         <button mat-raised-button color="primary" class="h6" [routerLink]="''">Back to main page</button>
         <button mat-raised-button color="primary" class="h6" (click)="startNewGame()">Start new game</button>
         <button mat-raised-button color="primary" class="h6" (click)="closeWin()">Close</button>
-      </div>
+      </ng-container>
+      <ng-template #waitWinningAmount>
+        <p class="row h4 mat-primary text-center popup-title">Please, wait. Your winning amount is calculating</p>
+      </ng-template>
     </div>
-  </ng-container>
+  </div>
+  <!--  </ng-container>-->
 </ng-container>

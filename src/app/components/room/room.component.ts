@@ -12,7 +12,7 @@ const LimitForCountDown = 3;
 const BoardsLength = 5;
 const BoardSize = 25;
 const CallSequenceLength = 75;
-const TicketsToStart = 5;
+const TicketsToStart = 3;
 
 @Component({
   selector: 'app-room',
@@ -23,12 +23,13 @@ const TicketsToStart = 5;
 export class RoomComponent implements OnInit, OnDestroy {
   @ViewChild('swiperContainer', {static: true}) swiperContainer!: ElementRef;
   public timeToStart!: number;
-  public calledBalls: number[] = [];
-  public boards!: number[][][];
+  public calledBalls: string[] = [];
+  public boards!: string[][][];
   public ticketPrice$: Observable<string> = this.ticketPriceService.ticketPrice$;
   public balanceIsUpdated$: Observable<boolean> = this.balanceService.balanceIsIsUpdated$;
   public ticketIsUpdated$: Observable<boolean> = this.ticketPriceService.ticketPriceIsUpdated$;
   public balance$: Observable<string> = this.balanceService.balance$;
+  public gameIsGenerated$: Observable<boolean> = this.playService.gameIsGenerated$;
   public callsSwiperConfig: SwiperOptions = {
     slidesPerView: 10,
     spaceBetween: 8,
@@ -41,13 +42,14 @@ export class RoomComponent implements OnInit, OnDestroy {
   };
   public showStartNewGame!: boolean;
   public gameRejected!: boolean;
-  private callSequence!: number[];
-  // public boughTickets = 1;
+  private callSequence: string[] = [];
   private currentGameTime!: GameTime;
   private stopCountDown$!: Subject<any>;
   private stopPlayTime$!: Subject<any>;
   private playSubscription!: Subscription;
   private rejectGameSubscription!: Subscription;
+  public winningAmount: string = '';
+  public winningAmountUpdated$: Observable<boolean> = this.playService.winningAmountUpdated$;
 
   constructor(
     private web3Service: Web3Service,
@@ -74,18 +76,18 @@ export class RoomComponent implements OnInit, OnDestroy {
     return this.currentGameTime === GameTime.BuyTime
   }
 
-  public get winnerExist(): boolean {
-    let winner = false;
-    for (const board of this.boards) {
-      for (const row of board) {
-        if (row.every(ball => this.calledBalls.includes(ball))) {
-          winner = true;
-          break;
-        }
-      }
-    }
-    return winner;
-  }
+  // public get winnerExist(): boolean {
+  //   let winner = false;
+  //   for (const board of this.boards) {
+  //     for (const row of board) {
+  //       if (row.every(ball => this.calledBalls.includes(ball))) {
+  //         winner = true;
+  //         break;
+  //       }
+  //     }
+  //   }
+  //   return winner;
+  // }
 
   public balanceValueIsEnough(balanceInEther: string, ticketPriceInEther: string): boolean {
     const balanceAsBigint = Web3Service.convertToBigint(balanceInEther);
@@ -103,20 +105,21 @@ export class RoomComponent implements OnInit, OnDestroy {
 
   public startGame(): void {
     this.gameRejected = false;
-    this.web3Service.play(5);
+    this.web3Service.play(TicketsToStart);
     this.currentGameTime = GameTime.Countdown;
     this.playSubscription = this.playService.gameCanBeStarted$
       .pipe(
         filter(canStarted => canStarted),
         first())
-      .subscribe(canStarted => {
-        if (canStarted) {
-          if (this.el.nativeElement?.offsetHeight) {
-            this.boardsSwiperConfig.slidesPerView = this.el.nativeElement.offsetHeight / 270;
-          }
-          this.startPlayTime();
-          this.rejectGameSubscription?.unsubscribe();
+      .subscribe(_ => {
+        const gameData = this.playService.gameData;
+        if (this.el.nativeElement?.offsetHeight) {
+          this.boardsSwiperConfig.slidesPerView = this.el.nativeElement.offsetHeight / 290;
         }
+        this.createCallSequence(gameData?.sequence || []);
+        this.createBoards(gameData?.boards);
+        this.startPlayTime();
+        this.rejectGameSubscription?.unsubscribe();
       })
 
     this.rejectGameSubscription = this.playService.gameRejected$
@@ -150,8 +153,8 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.initialize();
   }
 
-  public ballIsCalled(number: number): boolean {
-    return this.calledBalls.includes(number);
+  public ballIsCalled(ball: string): boolean {
+    return this.calledBalls.includes(ball);
   }
 
   public trackByNumber(number: number): number {
@@ -174,69 +177,78 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.stopPlayTime$ = new Subject();
     this.stopCountDown$ = new Subject();
     this.timeToStart = LimitForCountDown;
-    this.createCallSequence();
-    this.createBoards();
   }
 
-  private createCallSequence() {
-    const nums: Set<number> = new Set();
-    while (nums.size !== CallSequenceLength) {
-      nums.add(Math.floor(Math.random() * 100) + 1);
-    }
-    this.callSequence = [...nums];
+  private createCallSequence(sequence: string[]) {
+    this.callSequence = sequence;
+    // hardcoded sequence
+    // const nums: Set<number> = new Set();
+    // while (nums.size !== CallSequenceLength) {
+    //   nums.add(Math.floor(Math.random() * 100) + 1);
+    // }
+    // this.callSequence = [...nums];
   }
 
-  private createBoards() {
-    this.boards = [];
+  private createBoards(innerBoards: string[][] | undefined): void {
+    if (innerBoards) {
+      this.boards = innerBoards.map(innerBoard => {
+        return chunkArray(innerBoard, 5);
+      })
 
-    function chunkArray(myArray: number[], chunk_size: number): number[][] {
-      let index = 0;
-      const arrayLength = myArray.length;
-      const tempArray = [];
+      function chunkArray(myArray: string[], chunk_size: number): string[][] {
+        let index = 0;
+        const arrayLength = myArray.length;
+        const tempArray = [];
 
-      for (index = 0; index < arrayLength; index += chunk_size) {
-        const myChunk = myArray.slice(index, index + chunk_size);
-        tempArray.push(myChunk);
-      }
-
-      return tempArray;
-    }
-
-    for (let i = 0; i < BoardsLength; i++) {
-      const nums: Set<number> = new Set();
-      while (nums.size !== BoardSize) {
-        nums.add(Math.floor(Math.random() * 100) + 1);
-      }
-      const board = chunkArray([...nums], 5);
-      this.boards.push(board);
-    }
-  }
-
-  private startCountDown(): void {
-    interval(1000)
-      .pipe(takeUntil(this.stopCountDown$))
-      .subscribe(_ => {
-        this.timeToStart = this.timeToStart - 1;
-        if (this.timeToStart === 0) {
-          this.stopCountDown()
-          if (this.el.nativeElement?.offsetHeight) {
-            this.boardsSwiperConfig.slidesPerView = this.el.nativeElement.offsetHeight / 270;
-          }
-          this.startPlayTime();
+        for (index = 0; index < arrayLength; index += chunk_size) {
+          const myChunk = myArray.slice(index, index + chunk_size);
+          tempArray.push(myChunk);
         }
-      });
+
+        return tempArray;
+      }
+    }
+
+    // hardcoded boards;
+    // this.boards = [];
+    //
+    // for (let i = 0; i < BoardsLength; i++) {
+    //   const nums: Set<number> = new Set();
+    //   while (nums.size !== BoardSize) {
+    //     nums.add(Math.floor(Math.random() * 100) + 1);
+    //   }
+    //   const board = chunkArray([...nums], 5);
+    //   this.boards.push(board);
+    // }
   }
+
+  // private startCountDown(): void {
+  //   interval(1000)
+  //     .pipe(takeUntil(this.stopCountDown$))
+  //     .subscribe(_ => {
+  //       this.timeToStart = this.timeToStart - 1;
+  //       if (this.timeToStart === 0) {
+  //         this.stopCountDown()
+  //         if (this.el.nativeElement?.offsetHeight) {
+  //           this.boardsSwiperConfig.slidesPerView = this.el.nativeElement.offsetHeight / 350;
+  //         }
+  //         this.startPlayTime();
+  //       }
+  //     });
+  // }
 
   private startCallingBalls(): void {
-    interval(1000).pipe(
+    interval(2000).pipe(
       takeUntil(this.stopPlayTime$),
       map(i => {
-        if (i === this.callSequence.length || this.winnerExist) {
+        console.log('i', i, this.callSequence.length, this.callSequence[i]);
+        this.calledBalls.unshift(this.callSequence[i]);
+        if (i === this.callSequence.length - 1) {
+          this.winningAmount = this.playService.winningAmount;
           this.balanceService.updateBalanceAfterFreeze();
           this.currentGameTime = GameTime.Won;
           this.stopPlayTime();
         }
-        this.calledBalls.unshift(this.callSequence[i]);
       })
     ).subscribe();
   }
@@ -246,6 +258,8 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.rejectGameSubscription?.unsubscribe();
     this.playService.gameFinished();
     this.calledBalls = [];
+    this.callSequence = [];
+    this.winningAmount = '';
     this.stopCountDown();
     this.stopPlayTime();
   }

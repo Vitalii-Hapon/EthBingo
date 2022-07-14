@@ -36,7 +36,7 @@ const WebSocketHost = new InjectionToken<string>(
 
 const ContractAddress = new InjectionToken<string>(
   'ContractAddress',
-  {providedIn: "root", factory: () => '0x2Dc21F40228FFc99f361A5f2f0CF71BDef6Bede6'}
+  {providedIn: "root", factory: () => '0x7d50D5a2978e6aEE24fD0063c9B4428513fA11bd'}
 );
 
 @Injectable({
@@ -50,6 +50,7 @@ export class Web3Service {
   private web3!: Web3;
   private contract!: Contract;
   private provider!: WebsocketProvider;
+  private initialized = false;
   private jsonInterfaces: AbiItem[] = [
     {
       name: "PlayerBalanceChanged",
@@ -71,6 +72,32 @@ export class Web3Service {
       }, {
         type: 'string',
         name: 'reason',
+      }],
+      outputs: []
+    },{
+      name: "BingoGameGenerated",
+      type: "event",
+      inputs: [{
+        type: 'address',
+        name: 'recipient'
+      }, {
+        type: 'uint8[]',
+        name: 'generatedGameSequence',
+      }, {
+        type: 'uint8[][]',
+        name: 'generatedGameBoards',
+      }],
+      outputs: []
+    },
+    {
+      name: "BingoGameCalculated",
+      type: "event",
+      inputs: [{
+        type: 'address',
+        name: 'recipient'
+      }, {
+        type: 'uint256',
+        name: 'winningAmount',
       }],
       outputs: []
     },
@@ -120,16 +147,7 @@ export class Web3Service {
       }]
     },
     {
-      name: "withdrawCopy",
-      type: "function",
-      inputs: [],
-      outputs: [{
-        type: 'bool',
-        name: 'isWithdrawSuccess'
-      }]
-    },
-    {
-      name: "play",
+      name: "generateBingoGame",
       type: "function",
       inputs: [{
         type: 'uint8',
@@ -144,6 +162,12 @@ export class Web3Service {
         type: 'bytes32',
         name: 'promoCode'
       }],
+      outputs: []
+    },
+    {
+      name: "calculateBingoGame",
+      type: "function",
+      inputs: [],
       outputs: []
     }];
 
@@ -194,7 +218,6 @@ export class Web3Service {
     this.web3Status$
       .pipe(distinctUntilChanged())
       .subscribe(status => {
-      console.log('status', status)
       switch (status) {
         case Web3Status.MetamaskDefined: {
           this.initializeAccount();
@@ -243,7 +266,7 @@ export class Web3Service {
 
   public async getBingoBalance(): Promise<void> {
     const bingoBalanceInWei = await this.contract.methods.getBalance().call();
-    console.log('this balance', bingoBalanceInWei);
+    // console.log('this balance', bingoBalanceInWei);
     this.handleBalanceUpdate(bingoBalanceInWei)
   }
 
@@ -274,6 +297,33 @@ export class Web3Service {
     });
   }
 
+  private onGame() {
+    this.contract.once('BingoGameGenerated',{
+      filter: {recipient: this.account},
+    }, (err: Error, event: any) => {
+      if (err) {
+        this.onErrorCallbackForTransaction('getting error update', <IWeb3Error>err);
+      }
+      if (event) {
+        this.playService.startGame({sequence: event.returnValues.generatedGameSequence, boards: event.returnValues.generatedGameBoards})
+        this.calculateWinningAmount();
+      }
+    });
+  }
+
+  private onWinningEvent() {
+    this.contract.once('BingoGameCalculated',{
+      filter: {recipient: this.account},
+    }, (err: Error, event: any) => {
+      if (err) {
+        this.onErrorCallbackForTransaction('getting error update', <IWeb3Error>err);
+      }
+      if (event) {
+        const winningAmount = Web3Service.convertToEther(event.returnValues.winningAmount);
+        this.playService.updateWinningAmount(winningAmount);
+      }
+    });
+  }
 
   public async getTicketPrice(): Promise<void> {
     const ticketPriceInWei = await this.contract.methods.getTicketPrice().call();
@@ -291,12 +341,13 @@ export class Web3Service {
     const transactionParameter = {
       ...this.defaultTransParams,
       gasPrice: Web3.utils.toHex(50000),
-      data: this.contract.methods.play(tickets).encodeABI(),
+      data: this.contract.methods.generateBingoGame(tickets).encodeABI(),
     };
     this.metamaskProvider.request({method: 'eth_sendTransaction', params: [transactionParameter]})
       .then((transHash: any) => {
+        this.playService.startGenerateGame();
         this.onSentTransactionCallback(transHash);
-        this.playService.startGame();
+        this.onGame();
       })
       .catch((error: IWeb3Error) => {
         this.playService.rejectGame();
@@ -329,6 +380,23 @@ export class Web3Service {
     };
     this.metamaskProvider.request({method: 'eth_sendTransaction', params: [transactionParameter]})
       .then((transHash: any) => {
+        this.onSentTransactionCallback(transHash);
+      })
+      .catch((error: IWeb3Error) => this.onErrorCallbackForTransaction('making the withdraw', error));
+  }
+
+  public async calculateWinningAmount(): Promise<void> {
+    // this.contract.methods.calculateBingoGame().call().then((res: any) =>{
+    // console.log('this res', res); this.onWinningEvent();});
+    const transactionParameter = {
+      ...this.defaultTransParams,
+      gasPrice: Web3.utils.toHex(50000),
+      data: this.contract.methods.calculateBingoGame().encodeABI(),
+    };
+    this.metamaskProvider.request({method: 'eth_sendTransaction', params: [transactionParameter]})
+      .then((transHash: any) => {
+        console.log('this start on winning event');
+        this.onWinningEvent();
         this.onSentTransactionCallback(transHash);
       })
       .catch((error: IWeb3Error) => this.onErrorCallbackForTransaction('making the withdraw', error));
@@ -371,7 +439,10 @@ export class Web3Service {
   }
 
   private getAppData(): void {
-    console.log('get data');
+    if (this.initialized) {
+      return;
+    }
+    this.initialized = true;
     this.getTicketPrice();
     this.getBingoBalance();
     this.onBalanceEvent();
@@ -396,8 +467,6 @@ export class Web3Service {
   }
 
   private onSentTransactionCallback(hash: string) {
-    // this.web3.eth.getTransaction(hash).then(res => {}).catch(err => console.log(`We\`ve got an error, during get transaction.`, `Error Message: ${err.message}`));
-
     const subs = this.web3.eth.subscribe('logs', {address: this.contractAddress}, (err, result) => {
       if (err) {
         console.log(`We\`ve got an error, during subscriptions on logs`, `Error Message: ${err.message}`);
@@ -405,7 +474,6 @@ export class Web3Service {
       if (result?.transactionHash === hash) {
         this.web3.eth.getTransactionReceipt(hash)
           .then(receipt => {
-            // console.log('receipt', receipt);
             subs.unsubscribe();
           })
           .catch(err => { console.log(`We\`ve got an error, during get transaction receipt`, `Error Message: ${err.message}`); subs.unsubscribe()});
