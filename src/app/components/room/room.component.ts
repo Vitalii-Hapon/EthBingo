@@ -238,10 +238,9 @@ export class RoomComponent implements OnInit, OnDestroy {
   // }
 
   private startCallingBalls(): void {
-    interval(2000).pipe(
+    interval(1500).pipe(
       takeUntil(this.stopPlayTime$),
       map(i => {
-        console.log('i', i, this.callSequence.length, this.callSequence[i]);
         this.calledBalls.unshift(this.callSequence[i]);
         if (i === this.callSequence.length - 1) {
           this.winningAmount = this.playService.winningAmount;
