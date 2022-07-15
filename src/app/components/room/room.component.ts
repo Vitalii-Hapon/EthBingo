@@ -48,7 +48,6 @@ export class RoomComponent implements OnInit, OnDestroy {
   private stopPlayTime$!: Subject<any>;
   private playSubscription!: Subscription;
   private rejectGameSubscription!: Subscription;
-  public winningAmount: string = '';
   public winningAmountUpdated$: Observable<boolean> = this.playService.winningAmountUpdated$;
 
   constructor(
@@ -58,6 +57,10 @@ export class RoomComponent implements OnInit, OnDestroy {
     private el: ElementRef,
     private playService: PlayService,
   ) {
+  }
+
+  public get winningAmount(): string {
+    return this.playService.winningAmount;
   }
 
   public get isWonTime(): boolean {
@@ -243,7 +246,6 @@ export class RoomComponent implements OnInit, OnDestroy {
       map(i => {
         this.calledBalls.unshift(this.callSequence[i]);
         if (i === this.callSequence.length - 1) {
-          this.winningAmount = this.playService.winningAmount;
           this.balanceService.updateBalanceAfterFreeze();
           this.currentGameTime = GameTime.Won;
           this.stopPlayTime();
@@ -258,7 +260,6 @@ export class RoomComponent implements OnInit, OnDestroy {
     this.playService.gameFinished();
     this.calledBalls = [];
     this.callSequence = [];
-    this.winningAmount = '';
     this.stopCountDown();
     this.stopPlayTime();
   }

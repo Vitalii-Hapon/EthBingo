@@ -36,7 +36,7 @@ const WebSocketHost = new InjectionToken<string>(
 
 const ContractAddress = new InjectionToken<string>(
   'ContractAddress',
-  {providedIn: "root", factory: () => '0x7d50D5a2978e6aEE24fD0063c9B4428513fA11bd'}
+  {providedIn: "root", factory: () => '0xb2Ccc2Edf7ef5c3323313F5C7e8b851Df022a539'}
 );
 
 @Injectable({
@@ -95,9 +95,12 @@ export class Web3Service {
       inputs: [{
         type: 'address',
         name: 'recipient'
-      }, {
+      },{
         type: 'uint256',
         name: 'winningAmount',
+      },{
+        type: 'uint256',
+        name: 'winningRows',
       }],
       outputs: []
     },
@@ -169,6 +172,21 @@ export class Web3Service {
       type: "function",
       inputs: [],
       outputs: []
+    },
+    {
+      name: "generateBingoGameRead",
+      type: "function",
+      inputs: [{
+        type: "uint8",
+        name: "ticketAmount"
+      }],
+      outputs: [{
+        type: "uint8[]",
+        name: "generatedGameSequence"},{
+        type: "uint8[][]",
+        name: "generatedGameBoards"
+      }
+      ]
     }];
 
   constructor(
@@ -242,8 +260,8 @@ export class Web3Service {
     this.contract = new this.web3.eth.Contract(
       this.jsonInterfaces,
       this.contractAddress, {
-        gasPrice: '40000',
-        gas: 40000,
+        gasPrice: '100000',
+        gas: 100000,
         from: this.account,
       });
     this.web3.eth.defaultAccount = this.account;
@@ -336,7 +354,10 @@ export class Web3Service {
     return addressGameHistory;
   }
 
-  public play(tickets: number) {
+  public async play(tickets: number): Promise<void> {
+    // const generateBingoGameRead = await this.contract.methods.generateBingoGameRead(3).call({gas: 1000000, to: "0xb2Ccc2Edf7ef5c3323313F5C7e8b851Df022a539"});
+    // console.log('this generateBingoGameRead', generateBingoGameRead);
+
     this.balanceService.freezeBalanceForGame();
     const transactionParameter = {
       ...this.defaultTransParams,
@@ -395,7 +416,6 @@ export class Web3Service {
     };
     this.metamaskProvider.request({method: 'eth_sendTransaction', params: [transactionParameter]})
       .then((transHash: any) => {
-        console.log('this start on winning event');
         this.onWinningEvent();
         this.onSentTransactionCallback(transHash);
       })
